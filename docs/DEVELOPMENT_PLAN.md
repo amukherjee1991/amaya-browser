@@ -41,7 +41,7 @@ certificate checks.**
 | `packaging/debian/` | `.deb` build script, `.desktop`, AppStream metainfo, apt repo notes | — |
 | `packaging/macos/` | (Phase M) `.dmg`, signing/notarization, Homebrew cask | — |
 | `tests/` | Unit tests for the tooling; the **idle-traffic privacy test** | — |
-| `.forgejo/workflows/` | CI: lint + unit tests on every push; full build on a self-hosted runner | — |
+| `.forgejo/workflows/` | *(deferred)* CI — not set up for now; builds and tests run locally | — |
 | `docs/` | This plan, network-call inventory, release & rebase runbooks | — |
 
 `engine/`, `.cache/`, `dist/` and `obj-*` are never committed.
@@ -70,7 +70,7 @@ certificate checks.**
 
 | Phase | Scope | Gate (must pass to continue) |
 |---|---|---|
-| **0 Foundations** | Repo + git hygiene, `tools/amaya`, mozconfigs, rebrand (`amaya` binary, own icons, no Mozilla marks), first Linux build, `.deb`, Forgejo CI | **Gate 0:** reproducible `tools/amaya build && package` produces an installable `.deb` that launches as "Amaya" |
+| **0 Foundations** | Repo + git hygiene, `tools/amaya`, mozconfigs, rebrand (`amaya` binary, own icons, no Mozilla marks), first Linux build, `.deb` (CI deferred) | **Gate 0:** reproducible `tools/amaya build && package` produces an installable `.deb` that launches as "Amaya" |
 | **1 Hardened core** | Telemetry/studies/Pocket/sponsored content removed at build + policy level; ETP Strict + Total Cookie Protection; HTTPS-only; DoH (user-chosen, default off until first-run); uBlock Origin bundled; Balanced/Uniform fingerprint modes; network-call inventory | **Gate 1:** idle-traffic test — fresh profile, 5 min idle, zero connections outside `tests/privacy/allowlist.json` |
 | **M macOS** | macOS mozconfig, `.icns`, `.dmg`, signing, notarization, cask | Signed + notarized dmg launches on clean macOS; idle-traffic test passes on macOS |
 | **2 Workflow UI** | Vertical tabs default, spaces = containers, split view (4 panes), Glance, command bar, mods, importers, first-run (search choice) | **Gate 2:** daily-driver beta on Debian + macOS |
@@ -86,7 +86,7 @@ the integrator (main session) reviews and merges with `--no-ff`.
 | `feat/tooling` | Build/patch CLI, mozconfigs | `tools/`, `configs/`, `tests/tooling/` |
 | `feat/privacy` | Prefs, policies, telemetry build flags, uBO bundle, fingerprint modes, network inventory | `settings/`, `patches/` (privacy), `docs/network-calls.md` |
 | `feat/branding` | Name, icons, brand strings | `branding/` |
-| `feat/packaging-ci` | `.deb`, desktop integration, Forgejo workflows | `packaging/`, `.forgejo/` |
+| `feat/packaging` | `.deb`, desktop integration (Forgejo CI deferred) | `packaging/` |
 | `feat/privacy-test` | Idle-traffic test harness + allow-list | `tests/privacy/` |
 
 After merge: integration build on this machine → Gate 0 → Gate 1.
@@ -107,7 +107,7 @@ After merge: integration build on this machine → Gate 0 → Gate 1.
 * `main` is always buildable; work happens on `feat/*`, `fix/*`, `rebase/fx-NNN` branches.
 * Conventional commit subjects (`feat(privacy): …`, `build: …`, `ci: …`).
 * Firefox upgrades: `tools/amaya rebase <version>` on a `rebase/fx-<version>` branch → PR; target ≤ 48 h after each Firefox security release.
-* Every patch file carries `Reason:` and `Owner:` headers; CI rejects patches without them.
+* Every patch file carries `Reason:` and `Owner:` headers; `tools/amaya lint-patches` rejects patches without them (run locally; CI deferred).
 * Forgejo: add the remote later with
   `git remote add origin ssh://git@<forgejo-host>/<owner>/amaya-browser.git && git push -u origin --all`.
-  CI lives in `.forgejo/workflows/`; heavy builds need a self-hosted runner labelled `amaya-linux-x64` (and later `amaya-macos-arm64`).
+  Forgejo CI is deferred for now. When added, it goes in `.forgejo/workflows/`; full builds need a self-hosted runner (~40 GB disk, many cores).
