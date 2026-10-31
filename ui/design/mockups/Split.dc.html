@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Split view and command bar, dark</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="amaya-theme.css">
+<link rel="stylesheet" href="ds/amayabrowser/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="amaya-root" data-theme="dark" style="position: relative; width: 1440px; height: 900px; box-sizing: border-box; display: flex; gap: 8px; padding: 8px; background: var(--surface-window); font-family: var(--font-ui); color: var(--ink);">
+<nav class="amaya-sidebar" aria-label="Sidebar" style="padding: 0; width: 264px; flex: none;">
+<div class="amaya-sidebar__top">
+<div class="win-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+<button class="amaya-iconbtn" aria-label="Collapse sidebar"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M9 5v14"></path></svg></button>
+<span style="flex: 1;"></span>
+<button class="amaya-iconbtn" aria-label="Back"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button class="amaya-iconbtn" aria-label="Forward"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div class="amaya-urlbar">
+<button class="amaya-shieldbtn" aria-label="Privacy: 9 blocked"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg>9</button>
+<span class="amaya-urlbar__text"><span class="amaya-urlbar__host">docs.example.org</span>/spec</span>
+</div>
+<div class="amaya-pins">
+<button class="amaya-pin is-active" aria-label="Docs"><span class="amaya-tab__fav">D</span></button>
+<button class="amaya-pin" aria-label="Chat"><span class="amaya-tab__fav">C</span></button>
+<button class="amaya-pin" aria-label="Tracker"><span class="amaya-tab__fav">T</span></button>
+</div>
+<div class="amaya-sep"></div>
+<div class="amaya-tab is-active"><span class="amaya-tab__fav">S</span><span class="amaya-tab__title">Spec · Review · Notes</span><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--ink-muted);"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M12 5v14"></path></svg></div>
+<div class="amaya-tab"><span class="amaya-tab__fav">R</span><span class="amaya-tab__title">Release checklist</span><svg class="amaya-ico amaya-tab__sound" viewBox="0 0 24 24" aria-label="Playing sound" role="img"><path d="M5 10v4h3l4 4V6L8 10z"></path><path d="M16 9a4 4 0 010 6"></path></svg></div>
+<div class="amaya-tab"><span class="amaya-tab__fav">B</span><span class="amaya-tab__title">Build logs</span></div>
+<button class="amaya-newtab" style="border: 0; background: none; text-align: left;"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New tab</button>
+<div style="flex: 1;"></div>
+<div class="amaya-spaces">
+<button class="amaya-space" style="--c: var(--space-moss);" aria-label="Work"><span class="amaya-space__dot"></span></button>
+<button class="amaya-space is-active" style="--c: var(--space-sky);"><span class="amaya-space__dot"></span>Research</button>
+<button class="amaya-space" style="--c: var(--space-plum);" aria-label="Personal"><span class="amaya-space__dot"></span></button>
+<button class="amaya-iconbtn" aria-label="New space"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</nav>
+<div style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<section class="amaya-pane is-active" aria-label="Pane 1, active" style="grid-row: 1 / 3;">
+<div class="amaya-pane__bar"><span class="amaya-tab__fav">S</span><span style="flex: 1;">docs.example.org/spec</span></div>
+<div class="amaya-skel"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</section>
+<section class="amaya-pane" aria-label="Pane 2">
+<div class="amaya-pane__bar"><span class="amaya-tab__fav">R</span><span style="flex: 1;">review.example.org/42</span></div>
+<div class="amaya-skel"><i></i><i></i><i></i><i></i><i></i></div>
+</section>
+<section class="amaya-pane" aria-label="Pane 3">
+<div class="amaya-pane__bar"><span class="amaya-tab__fav">N</span><span style="flex: 1;">notes.example.org</span></div>
+<div class="amaya-skel"><i></i><i></i><i></i><i></i><i></i></div>
+</section>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.35);"></div>
+<div class="amaya-cmd" role="dialog" aria-label="Command bar" style="position: absolute; left: 584px; top: 140px;">
+<div class="amaya-cmd__input"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg><span style="flex: 1;">spl</span><span class="amaya-kbd">Esc</span></div>
+<div class="amaya-cmd__group">
+<div class="amaya-cmd__label">Actions</div>
+<div class="amaya-cmd__item is-selected"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M12 5v14"></path></svg>Split with current tab<span class="amaya-cmd__hint"><span class="amaya-kbd">Enter</span></span></div>
+<div class="amaya-cmd__item"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect></svg>Un-split<span class="amaya-cmd__hint"></span></div>
+</div>
+<div class="amaya-cmd__group" style="padding-top: 0;">
+<div class="amaya-cmd__label">Tabs</div>
+<div class="amaya-cmd__item"><span class="amaya-tab__fav">S</span>Spec · docs.example.org<span class="amaya-cmd__hint">Research</span></div>
+</div>
+<div class="amaya-cmd__group" style="padding-top: 0;">
+<div class="amaya-cmd__label">Settings</div>
+<div class="amaya-cmd__item"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path></svg>Split view layout<span class="amaya-cmd__hint">Appearance</span></div>
+</div>
+<div class="amaya-cmd__group" style="padding-top: 0;">
+<div class="amaya-cmd__label">Web search</div>
+<div class="amaya-cmd__item"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg>Search the web for “spl”<span class="amaya-cmd__hint"></span></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

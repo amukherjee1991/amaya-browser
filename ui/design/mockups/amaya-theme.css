@@ -1,0 +1,12 @@
+/* AmayaBrowser tokens as CSS variables (values from the design system's tokens.json). */
+[data-theme]{--font-ui:system-ui,-apple-system,"Segoe UI","Ubuntu","Cantarell",sans-serif;--font-display:"Newsreader",Georgia,"Times New Roman",serif;--font-mono:ui-monospace,"SF Mono","Cascadia Mono","DejaVu Sans Mono",monospace;
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;
+--radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-pill:999px;
+--layout-sidebar:264px;--layout-sidebar-compact:52px;--layout-toolbar:44px;--layout-row:36px;--layout-pane-gap:8px}
+[data-theme="light"]{--surface-window:#ebe8e1;--surface-page:#f9f7f2;--surface-raised:#ffffff;--surface-sunken:#dedad1;--ink:#1a1e1c;--ink-muted:#4f5652;--ink-subtle:#5a615c;--border-subtle:#d3cfc5;--border-strong:#6c726d;--brand:#0e6556;--brand-hover:#0a5246;--on-brand:#ffffff;--brand-soft:#d3e9e3;--on-brand-soft:#0a4a3f;--warn:#7a4e00;--warn-soft:#f6e6c3;--danger:#a8201a;--danger-soft:#f6d9d5;--focus-ring:#1f5fae;--space-moss:#3d7a4f;--space-clay:#b5543a;--space-sky:#2f6fa3;--space-sand:#a8782a;--space-plum:#7a4a7e;--space-slate:#4f5f6b;--shadow-tab:0 1px 2px rgba(26,30,28,0.14);--shadow-popover:0 8px 24px rgba(26,30,28,0.18);--shadow-glance:0 24px 64px rgba(26,30,28,0.28)}
+[data-theme="dark"]{--surface-window:#161918;--surface-page:#1d201f;--surface-raised:#272b29;--surface-sunken:#0f1110;--ink:#ebeae5;--ink-muted:#aab0ab;--ink-subtle:#98a09a;--border-subtle:#343937;--border-strong:#7b827d;--brand:#58c4ae;--brand-hover:#7ad3c1;--on-brand:#06241e;--brand-soft:#1c3a34;--on-brand-soft:#a6e3d5;--warn:#e8b04a;--warn-soft:#3b2f14;--danger:#f2877f;--danger-soft:#3d1f1c;--focus-ring:#8db8f2;--space-moss:#6fbf86;--space-clay:#e08a6f;--space-sky:#6fa8dc;--space-sand:#d9a24a;--space-plum:#c08bc4;--space-slate:#9aabb8;--shadow-tab:0 1px 2px rgba(0,0,0,0.5);--shadow-popover:0 8px 24px rgba(0,0,0,0.55);--shadow-glance:0 24px 64px rgba(0,0,0,0.7)}
+.win-dots{display:flex;gap:8px;padding:0 4px}
+.win-dots span{width:12px;height:12px;border-radius:50%;background:var(--border-subtle)}
+.webview{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-subtle);border-radius:var(--radius-md);background:var(--surface-page)}
+.site{flex:1;display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-6) var(--space-7);background:var(--surface-raised)}
+.site i{display:block;height:10px;border-radius:5px;background:var(--border-subtle)}
