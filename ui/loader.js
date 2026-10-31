@@ -168,6 +168,7 @@
     forward: '<path d="M9 6l6 6-6 6"/>',
     warning: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/>',
     pause: '<path d="M9 6v12M15 6v12"/>',
+    puzzle: '<path d="M5 7h4a2 2 0 114 0h4v4a2 2 0 110 4v4H5z"/>',
   };
 
   function icon(name, size = 16) {

@@ -55,7 +55,7 @@ Each module lives in `modules/<name>/` and owns only that folder.
 | `whenAnchor(id, cb)` | Calls `cb(el)` once the anchor exists (shell may build it after you) |
 | `overlayRoot` | A full-window `html:div#amaya-overlay-root` above the content area for floating UI (command bar, Glance, popovers). Pointer-events none by default; children set their own. |
 | `h(tag, props, ...children)` | Small HTML element helper (`html:` namespace) |
-| `icon(name)` | Inline SVG from the design system icon set (`shield, lock, plus, close, search, split, folder, chevron, sidebar, open-in-tab, sound, gear, arrow, clock, grid, back, forward, warning, pause`) |
+| `icon(name)` | Inline SVG from the design system icon set (`shield, lock, plus, close, search, split, folder, chevron, sidebar, open-in-tab, sound, gear, arrow, clock, grid, back, forward, warning, pause, puzzle`) |
 | `prefs` | `Services.prefs` |
 | `store(name)` | `{ async read(), async write(obj) }` JSON file at `<profile>/amaya/<name>.json` |
 | `emit(type, detail)` / `on(type, fn)` | Window-level events between modules, `amaya:<type>` |
