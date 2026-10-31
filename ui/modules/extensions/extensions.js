@@ -1,24 +1,27 @@
 /* Amaya extensions module.
  *
  * Makes Firefox add-ons first-class in the Amaya sidebar without replacing
- * any of Firefox's own extension UI:
+ * any of Firefox's own extension UI. Everything lives in one row right under
+ * the address field (#amaya-ext-row):
  *
- *  - Extensions button: Firefox's own #unified-extensions-button, moved into
- *    the sidebar top row (#amaya-sidebar-top) and drawn with the design-set
- *    puzzle icon. Being the native button, it opens the native extensions
- *    panel (gUnifiedExtensions.togglePanel) anchored to itself, and it is the
- *    anchor Firefox already uses for install/permission prompts and for the
- *    popups of extensions that live in the panel.
- *  - Pinned extensions ("Pin to toolbar" in the panel): Firefox puts them in
- *    the nav-bar, which the shell hides. Their real toolbar nodes are moved
- *    into a small row of icons in the top row (#amaya-ext-pins), at most
- *    MAX_PINS and only as many as fit; the rest are shown in the extensions
- *    panel the same way Firefox shows overflowed toolbar extensions, with
- *    their popups anchored to the Extensions button. Keyboard shortcuts and
- *    action.openPopup() therefore always find a visible anchor.
- *  - Compact mode (collapsed sidebar): the pinned icons are hidden; popups of
- *    pinned extensions anchor to the Extensions button, which keeps a
- *    (transparent) box over the collapse button for that purpose.
+ *  - One icon per extension with a toolbar button (browser action), pinned or
+ *    not, in the order of the extensions panel (pinned first, then the rest).
+ *    Each icon mirrors the real widget (icon, badge, title, enabled state);
+ *    a click runs the action the way a toolbar click does: Firefox's own
+ *    popup (the widget's panelview, PanelUI.showSubView) anchored to the
+ *    icon, or the extension's onClicked. Middle click and the right-click
+ *    menu (Manage / Remove / Pin / Report, the extension's own menu items)
+ *    are Firefox's too. The real widget nodes stay in the panel, so the panel
+ *    keeps listing every extension.
+ *  - Extensions button: Firefox's own #unified-extensions-button (puzzle),
+ *    last in the row. It opens the native extensions panel and is the anchor
+ *    Firefox uses for install/permission prompts, for extensions without an
+ *    icon here, and for popups opened by keyboard shortcut or
+ *    action.openPopup().
+ *  - Pinned extensions ("Pin to toolbar"): Firefox puts them in the nav-bar,
+ *    which the shell hides. Their real nodes are shown in the panel the way
+ *    Firefox shows extensions of a hidden toolbar, anchored to the button.
+ *  - Compact mode (52px rail): only the Extensions button shows.
  *  - Command bar: "Extensions" (open the panel), "Find extensions" (AMO), and
  *    one "<name> sidebar" entry per extension that has a sidebar, since the
  *    shell hides the native sidebar launcher icons.
@@ -36,11 +39,13 @@
 
   const NAME = "extensions";
   const NAVBAR = "nav-bar";
+  const ADDONS_AREA = "unified-extensions-area";
   const BUTTON_ID = "unified-extensions-button";
-  const PINS_ID = "amaya-ext-pins";
-  const MAX_PINS = 3;
-  const PIN_SLOT = 32; // 28px button + 4px gap
+  const ROW_ID = "amaya-ext-row";
+  const CONTEXT_MENU = "unified-extensions-context-menu";
   const AMO_URL = "https://addons.mozilla.org/firefox/extensions/";
+  // Attributes of the real action button that the mirrored icon follows.
+  const MIRRORED = ["style", "badge", "badgeStyle", "disabled", "data-l10n-args"];
 
   let state = null;
 
@@ -58,10 +63,22 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Extensions button                                                 */
+  /* Row and Extensions button                                         */
   /* ---------------------------------------------------------------- */
 
-  function setupButton(win, top) {
+  function buildRow(win, slot) {
+    const row = ui.h("div", {
+      id: ROW_ID,
+      class: "amaya-ext-row",
+      role: "toolbar",
+      "aria-label": "Extensions",
+    });
+    slot.after(row);
+    state.cleanups.push(() => row.remove());
+    return row;
+  }
+
+  function setupButton(win, row) {
     const doc = win.document;
     const button = doc.getElementById(BUTTON_ID);
     if (!button) {
@@ -76,12 +93,7 @@
       }
     });
 
-    // collapse, spacer, [pins], Extensions, back, forward, menu
-    const before =
-      doc.getElementById("amaya-back-button") ||
-      doc.getElementById("PanelUI-button") ||
-      null;
-    top.insertBefore(button, before && before.parentNode == top ? before : null);
+    row.append(button);
     button.classList.add("amaya-ext-button");
     state.cleanups.push(() => button.classList.remove("amaya-ext-button"));
 
@@ -108,22 +120,8 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Pinned extensions                                                 */
+  /* Widgets                                                           */
   /* ---------------------------------------------------------------- */
-
-  function buildPins(win, top, button) {
-    const doc = win.document;
-    // A XUL <toolbar> so the moved widgets keep their native toolbar styling
-    // (icon size, badge, hover) - it is not a CustomizableUI area.
-    const pins = doc.createXULElement("toolbar");
-    pins.id = PINS_ID;
-    pins.className = "amaya-ext-pins";
-    pins.setAttribute("mode", "icons");
-    pins.setAttribute("aria-label", "Pinned extensions");
-    top.insertBefore(pins, button && button.parentNode == top ? button : null);
-    state.cleanups.push(() => pins.remove());
-    return pins;
-  }
 
   function widgetNode(win, id) {
     try {
@@ -133,13 +131,38 @@
     }
   }
 
-  function pinnedIds(win) {
+  function webextIds(win, area) {
     const CUI = win.CustomizableUI;
     try {
-      return CUI.getWidgetIdsInArea(NAVBAR).filter(id => CUI.isWebExtensionWidget(id));
+      return CUI.getWidgetIdsInArea(area).filter(id => CUI.isWebExtensionWidget(id));
     } catch (e) {
       return [];
     }
+  }
+
+  /** widget id -> browserAction, for the extensions usable in this window. */
+  function browserActions(win) {
+    const map = new Map();
+    const gUE = win.gUnifiedExtensions;
+    let policies = [];
+    try {
+      policies = gUE.getActivePolicies();
+    } catch (e) {
+      log("policies", e);
+    }
+    for (const policy of policies) {
+      try {
+        const ba = gUE.browserActionFor(policy);
+        if (ba?.widget) {
+          map.set(ba.widget.id, ba);
+        }
+      } catch (e) {}
+    }
+    return map;
+  }
+
+  function actionButton(node) {
+    return node?.querySelector(".unified-extensions-item-action-button") || null;
   }
 
   function overflowList(win) {
@@ -156,49 +179,7 @@
     } catch (e) {}
   }
 
-  /** How many pinned icons fit next to the other top-row controls. */
-  function capacity(win) {
-    const top = state.top;
-    if (!top || state.collapsed) {
-      return state.capacity;
-    }
-    const width = top.getBoundingClientRect().width;
-    if (!width) {
-      return state.capacity;
-    }
-    const gap = parseFloat(win.getComputedStyle(top).columnGap) || 4;
-    let used = 0;
-    for (const child of top.children) {
-      if (child == state.pins || child.classList.contains("amaya-shell-spacer")) {
-        continue;
-      }
-      const w = child.getBoundingClientRect().width;
-      if (w) {
-        used += w + gap;
-      }
-    }
-    // Keep at least one slot of breathing room for the drag area.
-    const free = width - used - PIN_SLOT / 2;
-    return Math.max(0, Math.min(MAX_PINS, Math.floor(free / PIN_SLOT)));
-  }
-
-  function placeInPins(win, id, node, index) {
-    const pins = state.pins;
-    if (pins.children[index] != node) {
-      pins.insertBefore(node, pins.children[index] || null);
-    }
-    node.removeAttribute("overflowedItem");
-    node.removeAttribute("artificallyOverflowed");
-    // While the icons are hidden (collapsed sidebar), popups go to the
-    // Extensions button instead.
-    if (state.collapsed) {
-      node.setAttribute("cui-anchorid", BUTTON_ID);
-    } else {
-      node.removeAttribute("cui-anchorid");
-    }
-    setClass(win, id, false);
-  }
-
+  /** A pinned widget's node, out of the hidden nav-bar into the panel. */
   function placeInPanel(win, id, node, list) {
     // Same attributes Firefox uses for extensions of a hidden toolbar
     // (gUnifiedExtensions.onToolbarVisibilityChange).
@@ -211,42 +192,210 @@
     setClass(win, id, true);
   }
 
-  function sync(win) {
-    if (!state?.pins || state.customizing) {
-      return;
-    }
-    const ids = pinnedIds(win);
-    const cap = capacity(win);
-    state.capacity = cap;
-    let list = null;
-    let shown = 0;
-    for (const id of ids) {
+  /** Put every pinned widget back where CustomizableUI expects it. */
+  function restorePins(win) {
+    for (const id of state.tracked) {
       const node = widgetNode(win, id);
       if (!node) {
         continue;
       }
-      state.tracked.add(id);
-      if (shown < cap) {
-        placeInPins(win, id, node, shown);
-        shown++;
-      } else {
-        list ||= overflowList(win);
-        if (list) {
-          placeInPanel(win, id, node, list);
-        }
+      try {
+        node.setAttribute("artificallyOverflowed", true);
+        win.gUnifiedExtensions._maybeMoveWidgetNodeBack(id);
+      } catch (e) {
+        log("restore", id, e);
       }
     }
-    // Unpinned (moved to the panel) or removed since the last sync.
+    state.tracked.clear();
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Extension icons                                                   */
+  /* ---------------------------------------------------------------- */
+
+  function clickModifiers(win, e) {
+    const mods = [];
+    if (e.shiftKey) {
+      mods.push("Shift");
+    }
+    if (e.altKey) {
+      mods.push("Alt");
+    }
+    if (e.metaKey) {
+      mods.push("Command");
+    }
+    if (e.ctrlKey) {
+      mods.push("Ctrl");
+      if (win.AppConstants?.platform == "macosx") {
+        mods.push("MacCtrl");
+      }
+    }
+    return mods;
+  }
+
+  /** What a toolbar click on the widget does (CustomizableUI's
+   * handleWidgetCommand + showWidgetView for a "view" action), with the
+   * popup anchored to our icon instead of the hidden widget. */
+  function runAction(win, id, icon, e) {
+    const ba = state.actions.get(id);
+    if (!ba || icon.getAttribute("aria-disabled") == "true" || icon.open) {
+      return;
+    }
+    ba.lastClickInfo = { button: 0, modifiers: clickModifiers(win, e) };
+    ba.openPopupWithoutUserInteraction = false;
+    win.PanelUI.showSubView(ba.viewId, icon, e);
+  }
+
+  /** Firefox's extension context menu, for the real widget. The menu reads
+   * the extension from its triggerNode, which comes from the trigger event's
+   * target: dispatch it on the real action button first. */
+  function openContextMenu(win, id, icon, e) {
+    const doc = win.document;
+    const real = actionButton(widgetNode(win, id));
+    const menu = doc.getElementById(CONTEXT_MENU);
+    if (!real || !menu) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    const trigger = new win.MouseEvent("amaya-ext-contextmenu", {
+      screenX: e.screenX,
+      screenY: e.screenY,
+      button: 2,
+    });
+    real.dispatchEvent(trigger);
+    state.ctxPending = true;
+    const byKeyboard = !e.screenX && !e.screenY;
+    if (byKeyboard) {
+      menu.openPopup(icon, "after_start", 0, 0, true, false, trigger);
+    } else {
+      menu.openPopupAtScreen(e.screenX, e.screenY, true, trigger);
+    }
+  }
+
+  function makeIcon(win, id) {
+    const icon = ui.h(
+      "button",
+      {
+        type: "button",
+        class: "amaya-ext-icon",
+        "data-widget-id": id,
+      },
+      ui.h("span", { class: "amaya-ext-icon__img", "aria-hidden": "true" }),
+      ui.h("span", { class: "amaya-ext-icon__badge", "aria-hidden": "true" })
+    );
+    // PanelUI.showSubView marks its anchor with .open while the popup shows.
+    Object.defineProperty(icon, "open", {
+      configurable: true,
+      get() {
+        return this.hasAttribute("open");
+      },
+      set(v) {
+        this.toggleAttribute("open", !!v);
+      },
+    });
+    icon.addEventListener("click", e => {
+      if (e.button == 0) {
+        runAction(win, id, icon, e);
+      }
+    });
+    icon.addEventListener("auxclick", e => {
+      const ba = state?.actions.get(id);
+      if (e.button == 1 && ba && icon.getAttribute("aria-disabled") != "true") {
+        ba.handleEvent(e);
+      }
+    });
+    icon.addEventListener("contextmenu", e => openContextMenu(win, id, icon, e));
+    return icon;
+  }
+
+  function updateIcon(win, icon, ba, real) {
+    let name = "";
+    try {
+      name =
+        ba.action.getProperty(win.gBrowser.selectedTab, "title") ||
+        ba.extension.name ||
+        "";
+    } catch (e) {
+      name = ba.extension?.name || "";
+    }
+    icon.setAttribute("aria-label", name);
+    icon.setAttribute("title", name);
+    const style = real.getAttribute("style") || "";
+    if (icon.getAttribute("style") != style) {
+      icon.setAttribute("style", style);
+    }
+    const badge = real.getAttribute("badge") || "";
+    const badgeEl = icon.querySelector(".amaya-ext-icon__badge");
+    badgeEl.textContent = badge;
+    badgeEl.setAttribute("style", real.getAttribute("badgeStyle") || "");
+    icon.toggleAttribute("badged", !!badge);
+    icon.setAttribute("aria-disabled", String(real.hasAttribute("disabled")));
+  }
+
+  function sync(win) {
+    if (!state?.row || state.customizing) {
+      return;
+    }
+    const pinned = webextIds(win, NAVBAR);
+    const inPanel = webextIds(win, ADDONS_AREA);
+
+    // Pinned widgets: never left in the hidden nav-bar.
+    let list = null;
+    for (const id of pinned) {
+      const node = widgetNode(win, id);
+      if (!node) {
+        continue;
+      }
+      list ||= overflowList(win);
+      if (list) {
+        state.tracked.add(id);
+        placeInPanel(win, id, node, list);
+      }
+    }
     for (const id of [...state.tracked]) {
-      if (!ids.includes(id)) {
+      if (!pinned.includes(id)) {
+        // Unpinned: CustomizableUI moved it into the panel area.
         state.tracked.delete(id);
         const node = widgetNode(win, id);
-        if (node && node.parentNode == state.pins) {
-          node.remove();
+        if (node?.parentNode?.id == ADDONS_AREA) {
+          node.removeAttribute("overflowedItem");
+          node.removeAttribute("artificallyOverflowed");
         }
       }
     }
-    state.pins.toggleAttribute("empty", !state.pins.childElementCount);
+
+    // One icon per widget, in the panel's order.
+    state.actions = browserActions(win);
+    const keep = new Set();
+    let before = state.button && state.button.parentNode == state.row ? state.button : null;
+    const order = [...pinned, ...inPanel].filter(id => state.actions.has(id));
+    for (let i = order.length - 1; i >= 0; i--) {
+      const id = order[i];
+      const real = actionButton(widgetNode(win, id));
+      if (!real) {
+        continue;
+      }
+      let icon = state.icons.get(id);
+      if (!icon) {
+        icon = makeIcon(win, id);
+        state.icons.set(id, icon);
+      }
+      updateIcon(win, icon, state.actions.get(id), real);
+      state.mo.observe(real, { attributes: true, attributeFilter: MIRRORED });
+      if (icon.nextSibling != before || icon.parentNode != state.row) {
+        state.row.insertBefore(icon, before);
+      }
+      before = icon;
+      keep.add(id);
+    }
+    for (const [id, icon] of state.icons) {
+      if (!keep.has(id)) {
+        icon.remove();
+        state.icons.delete(id);
+      }
+    }
+    state.row.toggleAttribute("empty", !keep.size);
   }
 
   function scheduleSync(win) {
@@ -267,21 +416,37 @@
     });
   }
 
-  /** Put every pinned widget back where CustomizableUI expects it. */
-  function restorePins(win) {
-    for (const id of state.tracked) {
-      const node = widgetNode(win, id);
-      if (!node) {
-        continue;
-      }
-      try {
-        node.setAttribute("artificallyOverflowed", true);
-        win.gUnifiedExtensions._maybeMoveWidgetNodeBack(id);
-      } catch (e) {
-        log("restore", id, e);
-      }
+  /** Commands of Firefox's extension context menu end with
+   * gUnifiedExtensions.onContextMenuCommand(), which toggles the panel (it
+   * assumes the menu came from the panel). Opened from our row, that would
+   * open the panel after "Manage extension": skip it then. */
+  function guardContextMenu(win) {
+    const gUE = win.gUnifiedExtensions;
+    const menu = win.document.getElementById(CONTEXT_MENU);
+    if (!gUE || !menu) {
+      return;
     }
-    state.tracked.clear();
+    const original = gUE.onContextMenuCommand;
+    const own = Object.prototype.hasOwnProperty.call(gUE, "onContextMenuCommand");
+    gUE.onContextMenuCommand = function (...args) {
+      if (state?.ctxFromRow) {
+        return undefined;
+      }
+      return original.apply(this, args);
+    };
+    state.cleanups.push(() => {
+      if (own) {
+        gUE.onContextMenuCommand = original;
+      } else {
+        delete gUE.onContextMenuCommand;
+      }
+    });
+    listen(menu, "popupshowing", e => {
+      if (e.target == menu) {
+        state.ctxFromRow = !!state.ctxPending;
+        state.ctxPending = false;
+      }
+    });
   }
 
   /* ---------------------------------------------------------------- */
@@ -366,15 +531,24 @@
   /* Module                                                            */
   /* ---------------------------------------------------------------- */
 
-  function setup(win, top) {
-    if (!state || state.top) {
+  function setup(win, slot) {
+    if (!state || state.row) {
       return;
     }
     const doc = win.document;
-    state.top = top;
-    const button = setupButton(win, top);
-    state.pins = buildPins(win, top, button);
-    state.collapsed = !!doc.getElementById("amaya-sidebar")?.hasAttribute("amaya-collapsed");
+    state.row = buildRow(win, slot);
+    state.button = setupButton(win, state.row);
+    state.mo = new win.MutationObserver(() => scheduleSync(win));
+    state.cleanups.push(() => state.mo.disconnect());
+
+    // Builds the panel (and with it the panel area's widget nodes, which the
+    // icons mirror) and localizes the extension context menu.
+    try {
+      win.gUnifiedExtensions.panel;
+    } catch (e) {
+      log("panel", e);
+    }
+    guardContextMenu(win);
 
     const CUI = win.CustomizableUI;
     const listener = {
@@ -389,6 +563,9 @@
     CUI.addListener(listener);
     state.cleanups.push(() => CUI.removeListener(listener));
 
+    // Titles can be per tab.
+    listen(win, "TabSelect", () => scheduleSync(win));
+
     // Customize mode works on the real toolbars: hand the widgets back.
     const toolbox = doc.getElementById("navigator-toolbox");
     if (toolbox) {
@@ -402,23 +579,6 @@
       });
     }
 
-    const ro = new win.ResizeObserver(() => scheduleSync(win));
-    ro.observe(top);
-    state.cleanups.push(() => ro.disconnect());
-
-    try {
-      const off = ui.on("shell-compact", e => {
-        const detail = e?.detail ?? e;
-        state.collapsed = !!detail?.collapsed;
-        scheduleSync(win);
-      });
-      if (typeof off == "function") {
-        state.cleanups.push(off);
-      }
-    } catch (e) {
-      log("shell-compact", e);
-    }
-
     registerCommands(win);
     sync(win);
     log("ready");
@@ -428,8 +588,13 @@
     if (state) {
       return;
     }
-    state = { cleanups: [], tracked: new Set(), capacity: MAX_PINS, collapsed: false };
-    ui.whenAnchor("amaya-sidebar-top", top => setup(win, top));
+    state = {
+      cleanups: [],
+      tracked: new Set(),
+      icons: new Map(),
+      actions: new Map(),
+    };
+    ui.whenAnchor("amaya-urlbar-slot", slot => setup(win, slot));
   }
 
   function uninit(win) {
