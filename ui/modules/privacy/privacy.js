@@ -988,12 +988,18 @@
         return;
       }
       let showPanel = () => this.open({ animate: false, focusFirst: true });
+      // Offer only the switch that changes something for the current page.
+      let site = () => {
+        let s = this.computeState();
+        return s.canHandle ? (s.paused ? "paused" : "on") : "none";
+      };
       let cmds = [
         {
           id: "privacy.site-off",
           label: "Turn protection off for this site",
           icon: "pause",
           hint: "Privacy",
+          when: () => site() == "on",
           run: () => this.setSiteBlocking(false),
         },
         {
@@ -1001,6 +1007,7 @@
           label: "Turn protection on for this site",
           icon: "shield",
           hint: "Privacy",
+          when: () => site() == "paused",
           run: () => this.setSiteBlocking(true),
         },
         {
@@ -1015,6 +1022,7 @@
           label: "Fingerprint protection: Balanced",
           icon: "shield",
           hint: "Privacy",
+          when: () => chosenFpMode() != "balanced",
           run: () => {
             this.setFpMode("balanced");
             showPanel();
@@ -1025,6 +1033,7 @@
           label: "Fingerprint protection: Uniform",
           icon: "shield",
           hint: "Privacy",
+          when: () => chosenFpMode() != "uniform",
           run: () => {
             this.setFpMode("uniform");
             showPanel();
