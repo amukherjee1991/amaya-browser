@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Windows jump-list "New window" icon: a window with a title bar and a plus. -->
+  <rect fill="#F4F6FB" stroke="#3346C2" stroke-width="2" x="2" y="4" width="28" height="25" rx="3"/>
+  <path fill="#3346C2" d="M2 7Q2 4 5 4H27Q30 4 30 7V10H2Z"/>
+  <path fill="none" stroke="#1FA5BE" stroke-width="4" stroke-linecap="square" d="M16 14V25M10.5 19.5H21.5"/>
+</svg>

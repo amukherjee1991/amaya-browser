@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Amaya mark, small-size master (used for 16-48 px renders).
+       Same archway + lantern as amaya-icon.svg, but with heavier walls and
+       edges snapped to a 16-unit grid so it stays crisp at 16/32/48 px. -->
+  <defs>
+    <linearGradient id="amaya-arch-small" x1="32" y1="16" x2="224" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#45D0E3"/>
+      <stop offset="1" stop-color="#4A55E0"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#amaya-arch-small)" d="M32 149A140 140 0 0 1 128 16.1A140 140 0 0 1 224 149V232Q224 240 216 240H184Q176 240 176 232V160A70 70 0 0 0 128 93.6A70 70 0 0 0 80 160V232Q80 240 72 240H40Q32 240 32 232Z"/>
+  <circle fill="#FFC861" cx="128" cy="192" r="16"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Windows jump-list "New tab" icon: a tab outline with a plus. -->
+  <path fill="#F4F6FB" stroke="#3346C2" stroke-width="2" stroke-linejoin="round" d="M2 29V9Q2 5 6 5H26Q30 5 30 9V29Z"/>
+  <path fill="none" stroke="#1FA5BE" stroke-width="4" stroke-linecap="square" d="M16 12V24M10 18H22"/>
+</svg>
