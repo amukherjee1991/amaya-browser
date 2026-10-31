@@ -1,0 +1,162 @@
+/* Amaya extensions: the Extensions button and pinned extension icons in the
+ * sidebar top row. Values come from tokens.css (--amaya-*). */
+
+/* ------------------------------------------------------------------ */
+/* Extensions button (Firefox's own #unified-extensions-button)        */
+/* ------------------------------------------------------------------ */
+
+#amaya-sidebar-top > #unified-extensions-button.amaya-ext-button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--amaya-radius-sm);
+  background: none;
+  color: var(--amaya-ink-muted);
+  -moz-window-dragging: no-drag;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:hover {
+    background: var(--amaya-surface-page);
+    color: var(--amaya-ink);
+  }
+
+  &[open],
+  &:hover:active {
+    background: var(--amaya-surface-sunken);
+    color: var(--amaya-ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amaya-focus-ring);
+    outline-offset: 2px;
+  }
+
+  > .toolbarbutton-badge-stack {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+
+  > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+  > .toolbarbutton-text {
+    display: none;
+  }
+
+  /* Firefox draws its attention dot on the icon we hide: draw it here. */
+  &[attention] > .toolbarbutton-badge-stack::after {
+    content: "";
+    position: absolute;
+    inset-block-end: -3px;
+    inset-inline-end: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--amaya-radius-pill);
+    background: var(--amaya-warn);
+    box-shadow: 0 0 0 1.5px var(--amaya-surface-window);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #amaya-sidebar-top > #unified-extensions-button.amaya-ext-button {
+    transition: background-color 120ms var(--amaya-ease-out);
+  }
+}
+
+/* Collapsed sidebar (compact mode): only the collapse button shows. The
+ * Extensions button keeps an invisible box right on top of it, so the
+ * extensions panel and pinned extensions' popups still have an anchor. */
+:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-sidebar-top {
+  position: relative;
+
+  > #unified-extensions-button.amaya-ext-button:not([hidden]) {
+    display: grid;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: calc(50% - 14px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  > #unified-extensions-button.amaya-ext-button[open] {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Pinned extensions                                                    */
+/* ------------------------------------------------------------------ */
+
+#amaya-ext-pins {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  flex: none;
+  min-width: 0;
+  min-height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--amaya-ink-muted);
+  -moz-window-dragging: no-drag;
+  --toolbarbutton-outer-padding: 0px;
+  --toolbarbutton-inner-padding: 6px;
+  --toolbarbutton-border-radius: var(--amaya-radius-sm);
+  --toolbarbutton-hover-background: var(--amaya-surface-page);
+  --toolbarbutton-active-background: var(--amaya-surface-sunken);
+  --toolbarbutton-icon-fill: var(--amaya-ink-muted);
+
+  &[empty] {
+    display: none;
+  }
+
+  > toolbaritem {
+    margin: 0;
+    padding: 0;
+  }
+
+  .unified-extensions-item-action-button.toolbarbutton-1 {
+    margin: 0;
+    padding: 0;
+    background: none;
+
+    > .toolbarbutton-badge-stack {
+      box-sizing: border-box;
+      width: 28px;
+      height: 28px;
+      padding: 6px;
+      border-radius: var(--amaya-radius-sm);
+      background: none;
+    }
+
+    &:hover > .toolbarbutton-badge-stack {
+      background: var(--amaya-surface-page);
+    }
+
+    &:is([open], :hover:active) > .toolbarbutton-badge-stack {
+      background: var(--amaya-surface-sunken);
+    }
+
+    &:focus-visible > .toolbarbutton-badge-stack {
+      outline: 2px solid var(--amaya-focus-ring);
+      outline-offset: 0;
+    }
+  }
+}
