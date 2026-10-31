@@ -1,0 +1,378 @@
+/* Amaya privacy module: shield in the address field + privacy panel.
+ * Every value comes from tokens.css (--amaya-*). */
+
+/* One shield: hide Firefox's own tracking-protection / trust icon while ours
+ * is mounted. */
+:root[amaya-privacy] #tracking-protection-icon-container,
+:root[amaya-privacy] #trust-icon-container {
+  display: none !important;
+}
+
+/* ---------------- shield button ---------------- */
+
+.amaya-privacy-shield {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  box-sizing: border-box;
+  height: 24px;
+  min-width: 24px;
+  margin: 0 var(--amaya-space-1) 0 0;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+  font: 600 11.5px/14px var(--amaya-font-ui);
+  white-space: nowrap;
+  cursor: default;
+  align-self: center;
+  transition: background-color 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.amaya-privacy-shield[hidden] {
+  display: none;
+}
+.amaya-privacy-shield:hover,
+.amaya-privacy-shield.is-open {
+  background: color-mix(in srgb, var(--amaya-brand-soft) 80%, var(--amaya-on-brand-soft));
+}
+.amaya-privacy-shield:focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+.amaya-privacy-shield[data-variant="warn"] {
+  background: var(--amaya-warn-soft);
+  color: var(--amaya-warn);
+}
+.amaya-privacy-shield[data-variant="warn"]:is(:hover, .is-open) {
+  background: color-mix(in srgb, var(--amaya-warn-soft) 85%, var(--amaya-warn));
+}
+.amaya-privacy-shield[data-variant="danger"] {
+  background: var(--amaya-danger-soft);
+  color: var(--amaya-danger);
+}
+.amaya-privacy-shield[data-variant="danger"]:is(:hover, .is-open) {
+  background: color-mix(in srgb, var(--amaya-danger-soft) 85%, var(--amaya-danger));
+}
+.amaya-privacy-shield[data-variant="off"] {
+  background: none;
+  color: var(--amaya-ink-muted);
+}
+.amaya-privacy-shield[data-variant="off"]:is(:hover, .is-open) {
+  background: var(--amaya-surface-raised);
+}
+.amaya-privacy-shield__icon,
+.amaya-privacy-shield__extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.amaya-privacy-shield__extra {
+  margin-inline-start: 2px;
+  padding-inline-start: 5px;
+  border-inline-start: 1px solid currentColor;
+}
+.amaya-privacy-shield__text[hidden],
+.amaya-privacy-shield__extra[hidden] {
+  display: none;
+}
+
+.amaya-privacy-ico {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* "Upgraded" chip next to the shield */
+.amaya-privacy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  flex: none;
+  align-self: center;
+  height: 20px;
+  margin-inline-end: var(--amaya-space-1);
+  padding: 0 var(--amaya-space-2);
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+  font: 500 11.5px/14px var(--amaya-font-ui);
+  white-space: nowrap;
+}
+.amaya-privacy-chip[hidden] {
+  display: none;
+}
+.amaya-privacy-chip .amaya-privacy-ico {
+  width: 12px;
+  height: 12px;
+}
+
+/* While the person edits the address, the page's state no longer applies. */
+.urlbar-input-container[pageproxystate="invalid"] > :is(.amaya-privacy-shield, .amaya-privacy-chip),
+#urlbar[focused] .amaya-privacy-chip {
+  display: none;
+}
+
+/* ---------------- panel ---------------- */
+
+#amaya-privacy-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+.amaya-privacy-panel {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-4);
+  width: 340px;
+  padding: var(--amaya-space-4);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-lg);
+  background: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-popover);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+  text-align: start;
+  cursor: default;
+  -moz-user-select: none;
+  user-select: none;
+}
+.amaya-privacy-panel[hidden] {
+  display: none;
+}
+.amaya-privacy-panel *,
+.amaya-privacy-panel *::before,
+.amaya-privacy-panel *::after {
+  box-sizing: border-box;
+}
+.amaya-privacy-panel:focus {
+  outline: none;
+}
+.amaya-privacy-panel :focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .amaya-privacy-panel.is-animating {
+    animation: amaya-privacy-in 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @keyframes amaya-privacy-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.97);
+    }
+  }
+}
+
+.amaya-privacy-head {
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-3);
+}
+.amaya-privacy-headtext {
+  min-width: 0;
+}
+.amaya-privacy-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-privacy-mark .amaya-privacy-ico {
+  width: 20px;
+  height: 20px;
+}
+.amaya-privacy-panel[data-variant="warn"] .amaya-privacy-mark {
+  background: var(--amaya-warn-soft);
+  color: var(--amaya-warn);
+}
+.amaya-privacy-panel[data-variant="danger"] .amaya-privacy-mark {
+  background: var(--amaya-danger-soft);
+  color: var(--amaya-danger);
+}
+.amaya-privacy-panel[data-variant="off"] .amaya-privacy-mark {
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink-muted);
+}
+.amaya-privacy-title {
+  overflow-wrap: anywhere;
+  font: 600 15px/22px var(--amaya-font-ui);
+}
+.amaya-privacy-sub {
+  color: var(--amaya-ink-muted);
+  font: 400 12px/16px var(--amaya-font-ui);
+}
+.amaya-privacy-label {
+  color: var(--amaya-ink);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+
+.amaya-privacy-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--amaya-space-2);
+}
+.amaya-privacy-stat {
+  padding: var(--amaya-space-2) var(--amaya-space-3);
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-surface-page);
+}
+.amaya-privacy-stat b {
+  display: block;
+  font: 600 22px/28px var(--amaya-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.amaya-privacy-stat span {
+  color: var(--amaya-ink-muted);
+  font: 400 11.5px/14px var(--amaya-font-ui);
+}
+
+.amaya-privacy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--amaya-space-3);
+}
+.amaya-privacy-fp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-2);
+}
+.amaya-privacy-cost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--amaya-space-2);
+}
+
+.amaya-privacy-segment {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-sunken);
+}
+.amaya-privacy-segment button {
+  appearance: none;
+  height: 26px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--amaya-ink-muted);
+  font: 500 12px/16px var(--amaya-font-ui);
+  transition: background-color 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    color 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.amaya-privacy-segment button:hover:not(.is-on) {
+  color: var(--amaya-ink);
+}
+.amaya-privacy-segment button.is-on {
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  box-shadow: var(--amaya-shadow-tab);
+}
+
+.amaya-privacy-toggle {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-surface-sunken);
+  transition: background-color 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.amaya-privacy-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amaya-border-strong);
+  transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.amaya-privacy-toggle[aria-checked="true"] {
+  border-color: var(--amaya-brand);
+  background: var(--amaya-brand);
+}
+.amaya-privacy-toggle[aria-checked="true"]::after {
+  transform: translateX(16px);
+  background: var(--amaya-on-brand);
+}
+.amaya-privacy-toggle:disabled {
+  opacity: 0.5;
+}
+
+.amaya-privacy-actions {
+  display: flex;
+  gap: var(--amaya-space-2);
+}
+.amaya-privacy-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  height: 32px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  font: 500 12px/16px var(--amaya-font-ui);
+  white-space: nowrap;
+}
+.amaya-privacy-btn:hover {
+  background: var(--amaya-surface-sunken);
+}
+.amaya-privacy-btn--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--amaya-brand);
+}
+.amaya-privacy-btn--quiet:hover {
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-privacy-restart {
+  flex: none;
+  height: 24px;
+  padding: 0 var(--amaya-space-2);
+}
+.amaya-privacy-restart[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amaya-privacy-shield,
+  .amaya-privacy-segment button,
+  .amaya-privacy-toggle,
+  .amaya-privacy-toggle::after {
+    transition: none;
+  }
+}
