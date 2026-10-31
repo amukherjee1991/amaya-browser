@@ -85,6 +85,18 @@
     button.classList.add("amaya-ext-button");
     state.cleanups.push(() => button.classList.remove("amaya-ext-button"));
 
+    // Firefox opens the panel from listeners delegated to #navigator-toolbox
+    // (navigator-toolbox.js: "mousedown" and "keypress" on the toolbox,
+    // matched by id). Outside the toolbox those never see the button, so a
+    // real click did nothing. Same handler, on the button itself.
+    const open = e => {
+      if (!button.closest("#navigator-toolbox")) {
+        win.gUnifiedExtensions.togglePanel(e);
+      }
+    };
+    listen(button, "mousedown", open);
+    listen(button, "keypress", open);
+
     const stack = button.querySelector(".toolbarbutton-badge-stack");
     if (stack && !stack.querySelector(".amaya-ico")) {
       const svg = ui.icon("puzzle");
