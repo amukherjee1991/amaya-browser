@@ -76,11 +76,14 @@
     } else {
       registry.push(cmd);
     }
-    if (bar && bar.isOpen) {
+    // Not while allCommands() is collecting: a module that registers from
+    // inside "register-commands" would otherwise re-enter it without end.
+    if (bar && bar.isOpen && !collecting) {
       bar.commands = allCommands();
       bar.refresh();
     }
   }
+  let collecting = false;
 
   function unregisterCommand(id) {
     for (let i = registry.length - 1; i >= 0; i--) {
@@ -665,9 +668,14 @@
     registry.forEach(add);
     // Dynamic, open-time commands: ui.on("register-commands", e => e.detail.add({...}))
     const extra = [];
-    window.dispatchEvent(
-      new CustomEvent("amaya:register-commands", { detail: { add: c => extra.push(c) } })
-    );
+    collecting = true;
+    try {
+      window.dispatchEvent(
+        new CustomEvent("amaya:register-commands", { detail: { add: c => extra.push(c) } })
+      );
+    } finally {
+      collecting = false;
+    }
     extra.forEach(add);
     return list;
   }
