@@ -615,6 +615,8 @@
       group: "settings",
       keywords: ["fingerprint", "privacy", "resist", mode],
       hint: () => (fpMode() == mode ? "Current" : "Applies after restart"),
+      // The privacy module registers its own fingerprint commands.
+      when: () => !window.AmayaPrivacy,
       run: () => Services.prefs.setStringPref(FP_PREF, mode),
     });
     return [
