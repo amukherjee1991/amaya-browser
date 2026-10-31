@@ -133,7 +133,9 @@ def copy_tree(src: Path, dst: Path) -> None:
 
 def copy_file(src: Path, dst: Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
-    if dst.is_symlink():
+    # Replace rather than overwrite in place: dst may be a symlink or a hardlink
+    # into another app copy, which must not change.
+    if dst.is_symlink() or dst.exists():
         dst.unlink()
     shutil.copyfile(src, dst)
 
