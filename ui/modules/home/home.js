@@ -969,8 +969,13 @@
       themeQuery.removeEventListener("change", onTheme);
       clearInterval(interval);
       clearTimeout(refreshTimer);
+      // In place: the command bar keeps a reference to this same array.
       if (ui && Array.isArray(ui.commands)) {
-        ui.commands = ui.commands.filter(c => !COMMANDS.includes(c));
+        for (let i = ui.commands.length - 1; i >= 0; i--) {
+          if (COMMANDS.includes(ui.commands[i])) {
+            ui.commands.splice(i, 1);
+          }
+        }
       }
       document.getElementById("amaya-home-onboarding")?.remove();
       document.getElementById("amaya-home-settings")?.remove();
