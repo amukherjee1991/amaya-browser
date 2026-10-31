@@ -1,0 +1,282 @@
+/* Amaya split view. Applies only while a split tab is selected
+   (#tabbrowser-tabpanels[amaya-split], set by split.js). The native split view
+   keeps its data model; this sheet swaps its two-panel flexbox for a grid. */
+
+/* ----------------------------------------------------------------- grid */
+
+#tabbrowser-tabpanels[amaya-split] {
+  display: grid !important;
+  grid-template-columns: var(--amaya-split-cols, minmax(0, 1fr) minmax(0, 1fr));
+  grid-template-rows: var(--amaya-split-rows, minmax(0, 1fr));
+  gap: var(--amaya-layout-pane-gap);
+  /* The shell insets the web view from the window; set this when it does not. */
+  padding: var(--amaya-split-inset, 0px);
+  background: var(--amaya-surface-window);
+}
+
+/* The native splitter and per-pane footer are replaced by gutters and headers. */
+#tabbrowser-tabpanels[amaya-split] > .split-view-splitter,
+#tabbrowser-tabpanels[amaya-split] split-view-footer {
+  display: none !important;
+}
+
+#tabbrowser-tabpanels[amaya-split] > .split-view-panel.split-view-panel-active {
+  position: relative !important;
+  margin: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  flex: none !important;
+  transition: none !important;
+}
+
+#tabbrowser-tabpanels[amaya-split] > .split-view-panel-active > .browserContainer {
+  box-sizing: border-box;
+  padding-top: 28px;
+  border: 1px solid var(--amaya-border-subtle) !important;
+  border-radius: var(--amaya-radius-md) !important;
+  outline: none !important;
+  overflow: clip;
+  background: var(--amaya-surface-raised);
+  --content-scrollbar-inset-block: 0 var(--amaya-radius-md);
+  --content-scrollbar-inset-inline-start: var(--amaya-radius-md);
+  --content-scrollbar-inset-inline-end: var(--amaya-radius-md);
+}
+
+/* Active pane: 2px brand outline (1px border + 1px outline, like the design's
+   border + ring), drawn into the gap. */
+#tabbrowser-tabpanels[amaya-split] > .split-view-panel-active.deck-selected > .browserContainer {
+  border-color: var(--amaya-brand) !important;
+  outline: 1px solid var(--amaya-brand) !important;
+  outline-offset: 0 !important;
+}
+
+/* While dragging a gutter, keep pages from eating pointer events. */
+#tabbrowser-tabpanels[amaya-split-resizing] browser {
+  pointer-events: none;
+}
+
+/* Page fullscreen (video etc.): the active pane takes the whole area. */
+:root[inDOMFullscreen] #tabbrowser-tabpanels[amaya-split] {
+  padding: 0;
+  gap: 0;
+}
+:root[inDOMFullscreen] #tabbrowser-tabpanels[amaya-split] > .split-view-panel-active.deck-selected {
+  position: absolute !important;
+  inset: 0;
+  grid-area: auto !important;
+}
+:root[inDOMFullscreen] #tabbrowser-tabpanels[amaya-split] > .split-view-panel-active > .browserContainer {
+  padding-top: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+}
+:root[inDOMFullscreen] .amaya-pane-bar,
+:root[inDOMFullscreen] .amaya-split-gutter {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------- header */
+
+.amaya-pane-bar {
+  display: none;
+}
+
+#tabbrowser-tabpanels[amaya-split] > .split-view-panel-active > .browserContainer > .amaya-pane-bar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 var(--amaya-space-1);
+  border-bottom: 1px solid var(--amaya-border-subtle);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink-muted);
+  font: 500 11.5px/14px var(--amaya-font-ui, system-ui);
+  user-select: none;
+}
+
+.amaya-pane-bar[active] {
+  color: var(--amaya-ink);
+}
+
+.amaya-pane-bar button {
+  appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--amaya-radius-sm);
+}
+
+.amaya-pane-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.amaya-pane-btn svg,
+.amaya-pane-btn .amaya-split-ico-fallback {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.amaya-pane-btn:disabled {
+  opacity: 0.4;
+}
+
+.amaya-pane-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 var(--amaya-space-1);
+  text-align: start;
+}
+
+.amaya-pane-bar button:not(:disabled):hover {
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink);
+}
+
+.amaya-pane-bar button:focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: -2px;
+}
+
+.amaya-pane-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.amaya-pane-fav {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.amaya-pane-fav img {
+  width: 16px;
+  height: 16px;
+}
+
+.amaya-pane-fav[letter] {
+  background: var(--amaya-border-subtle);
+  color: var(--amaya-ink);
+  font: 600 10px/16px var(--amaya-font-ui, system-ui);
+}
+
+/* -------------------------------------------------------------- gutters */
+
+#amaya-split-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#amaya-split-layer[standalone] {
+  position: fixed;
+  z-index: 2147483000;
+}
+
+.amaya-split-gutter {
+  position: fixed;
+  z-index: 1;
+  pointer-events: auto;
+  cursor: col-resize;
+  outline: none;
+}
+
+.amaya-split-gutter[axis="row"] {
+  cursor: row-resize;
+}
+
+.amaya-split-gutter::after {
+  content: "";
+  position: absolute;
+  inset: 0 5px;
+  border-radius: var(--amaya-radius-pill);
+  background: transparent;
+}
+
+.amaya-split-gutter[axis="row"]::after {
+  inset: 5px 0;
+}
+
+.amaya-split-gutter:hover::after,
+.amaya-split-gutter[dragging]::after {
+  background: var(--amaya-border-strong);
+}
+
+.amaya-split-gutter:focus-visible::after {
+  background: var(--amaya-focus-ring);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .amaya-split-gutter::after,
+  .amaya-pane-bar button {
+    transition: background-color 120ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+/* ----------------------------------------------------- drop to split */
+
+#amaya-split-drop {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.amaya-split-drop-zone {
+  display: none;
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed var(--amaya-brand);
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-brand-soft);
+  opacity: 0.75;
+}
+
+#amaya-split-drop[zone] > .amaya-split-drop-zone {
+  display: block;
+}
+
+/* ----------------------------------------------- sidebar: grouped tabs */
+
+tab-split-view-wrapper.amaya-split-group {
+  box-shadow: inset 2px 0 0 var(--amaya-border-strong);
+}
+
+#tabbrowser-tabs[orient="vertical"] tab-split-view-wrapper.amaya-split-group {
+  /* One row per pane in the sidebar, bracketed together. */
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+#tabbrowser-tabs[orient="horizontal"] tab-split-view-wrapper.amaya-split-group:is([amaya-panes="3"], [amaya-panes="4"]) {
+  grid-template-columns: repeat(var(--amaya-split-strip-cols, 4), minmax(0, 1fr)) !important;
+}
+
+#tabbrowser-tabs[orient="horizontal"] tab-split-view-wrapper.amaya-split-group[amaya-panes="3"] {
+  --amaya-split-strip-cols: 3;
+}
