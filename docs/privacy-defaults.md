@@ -170,7 +170,7 @@ Translations remain available (local, on demand).
 
 | Pref | Default | Why |
 |---|---|---|
-| `amaya.update.enabled` | true (read by `ui/modules/update/`; unset = true) | Linux has no built-in updater (`--disable-updater`), so without this nobody learns about security fixes. The check is a GET of the static `https://amaya.arghyam.me/downloads/latest.json` ~60 s after start and every 12 h, with no cookies, referrer, custom headers or identifiers (see [network-calls.md](network-calls.md) §1). Set to false to stop automatic checks; "Check for updates" in the command bar still works. Nothing is installed without you pressing **Update**, and downloads are sha256-verified against `SHA256SUMS`. |
+| `amaya.update.enabled` | true (read by `ui/modules/update/`; unset = true) | Linux has no built-in updater (`--disable-updater`), so without this nobody learns about security fixes. The check is a GET of the static `https://amaya.arghyam.me/downloads/latest.json` ~60 s after start, every 4 h and when a window becomes active more than 1 h after the last check, with no cookies, referrer, custom headers or identifiers (see [network-calls.md](network-calls.md) §1). Set to false to stop automatic checks; "Check for updates" in the command bar still works. Nothing is installed without you pressing **Update**, and downloads are sha256-verified against `SHA256SUMS`. A `.deb` install with Amaya's apt source (`/etc/apt/sources.list.d/amaya.sources`) is updated by apt instead: **Update** opens Software Updater. |
 
 ### Fingerprinting modes
 
