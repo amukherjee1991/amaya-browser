@@ -13,6 +13,9 @@
   --amaya-shell-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --amaya-shell-duration: 200ms;
   --amaya-shell-inset: var(--amaya-layout-pane-gap);
+  /* The web view card is already inset from the window: split panes must
+     not add a second inset of their own. */
+  --amaya-split-inset: 0px;
 
   /* Frame */
   --toolbox-background-color: var(--amaya-surface-window);
