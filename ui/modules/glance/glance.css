@@ -1,0 +1,164 @@
+/* Amaya Glance: a link previewed over the page (ui/design/components/Glance.md).
+   Every value comes from tokens.css (--amaya-*). */
+
+.amaya-glance-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  font: 400 13px/16px var(--amaya-font-ui);
+  color: var(--amaya-ink);
+}
+
+/* 45% scrim over the content area only; the sidebar stays readable. */
+.amaya-glance-scrim {
+  position: absolute;
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-scrim, rgba(10, 14, 12, 0.45));
+}
+
+.amaya-glance {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: var(--amaya-radius-lg);
+  background: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-glance);
+  color: var(--amaya-ink);
+}
+
+.amaya-glance *,
+.amaya-glance *::before,
+.amaya-glance *::after {
+  box-sizing: border-box;
+}
+
+.amaya-glance__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-2);
+  flex: none;
+  height: 44px;
+  padding: 0 var(--amaya-space-3);
+  border-bottom: 1px solid var(--amaya-border-subtle);
+  background: var(--amaya-surface-raised);
+}
+
+.amaya-glance__ico {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.amaya-glance__security {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  flex: none;
+  color: var(--amaya-ink-muted);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+
+.amaya-glance__security:empty {
+  display: none;
+}
+
+.amaya-glance__security--warn {
+  color: var(--amaya-warn);
+}
+
+.amaya-glance__address {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--amaya-ink-muted);
+  font: 400 13px/16px var(--amaya-font-ui);
+}
+
+.amaya-glance__host {
+  color: var(--amaya-ink);
+  font-weight: 600;
+}
+
+/* Quiet buttons: verbs, brand ink, no fill until hover. */
+.amaya-glance__btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  flex: none;
+  height: 32px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--amaya-radius-sm);
+  background: transparent;
+  color: var(--amaya-brand);
+  font: 500 12px/16px var(--amaya-font-ui);
+  cursor: pointer;
+}
+
+.amaya-glance__btn:hover {
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+
+.amaya-glance__iconbtn {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--amaya-radius-sm);
+  background: transparent;
+  color: var(--amaya-ink-muted);
+  cursor: pointer;
+}
+
+.amaya-glance__iconbtn:hover {
+  background: var(--amaya-surface-page);
+  color: var(--amaya-ink);
+}
+
+.amaya-glance__btn:focus-visible,
+.amaya-glance__iconbtn:focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+.amaya-glance__body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--amaya-surface-page);
+}
+
+.amaya-glance__browser {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .amaya-glance__btn,
+  .amaya-glance__iconbtn {
+    transition: background-color var(--amaya-dur-hover) var(--amaya-ease-out),
+      color var(--amaya-dur-hover) var(--amaya-ease-out);
+  }
+}
