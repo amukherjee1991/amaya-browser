@@ -572,10 +572,33 @@
     state.cleanups.push(() => amo.disconnect());
 
     // Floating address field while collapsed in compact mode.
+    // It stays up while focus is anywhere in it (the privacy shield) or one
+    // of its popups is open (the privacy panel, aria-expanded="true").
     if (urlbar) {
       const mo = new win.MutationObserver(() => syncFloatingUrlbar(win));
-      mo.observe(urlbar, { attributes: true, attributeFilter: ["focused"] });
+      mo.observe(urlbar, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ["focused", "aria-expanded"],
+      });
       state.cleanups.push(() => mo.disconnect());
+      listen(urlbar, "focusin", () => syncFloatingUrlbar(win));
+      listen(urlbar, "focusout", () => syncFloatingUrlbar(win));
+      // A press on a control inside it (the shield) blurs the input before
+      // the click lands: hold the field in place until the click is done.
+      listen(urlbar, "mousedown", () => {
+        state.holdFloating = true;
+      }, true);
+      listen(win, "mouseup", () => {
+        if (state.holdFloating) {
+          win.setTimeout(() => {
+            if (state) {
+              state.holdFloating = false;
+              syncFloatingUrlbar(win);
+            }
+          }, 0);
+        }
+      }, true);
     }
 
     listen(win, "keydown", e => onKeyDown(win, e), true);
@@ -633,11 +656,33 @@
     const doc = win.document;
     const container = doc.getElementById("sidebar-container");
     const urlbar = doc.getElementById("urlbar");
+    const root = doc.documentElement;
+    const active = () =>
+      !!urlbar &&
+      (urlbar.hasAttribute("focused") ||
+        urlbar.matches(":focus-within") ||
+        !!urlbar.querySelector('[aria-expanded="true"]'));
     const floating =
       isCompact(win) &&
       !container?.hasAttribute("sidebar-launcher-expanded") &&
-      !!urlbar?.hasAttribute("focused");
-    doc.documentElement.toggleAttribute("amaya-urlbar-floating", floating);
+      (active() || (root.hasAttribute("amaya-urlbar-floating") && state.holdFloating));
+    if (floating || !root.hasAttribute("amaya-urlbar-floating")) {
+      root.toggleAttribute("amaya-urlbar-floating", floating);
+      return;
+    }
+    // Focus moving between the input and a control in the field passes
+    // through "nothing focused" for a moment: decide once it has settled.
+    win.clearTimeout(state.floatTimer);
+    state.floatTimer = win.setTimeout(() => {
+      if (!state) {
+        return;
+      }
+      const still =
+        isCompact(win) &&
+        !container?.hasAttribute("sidebar-launcher-expanded") &&
+        (active() || state.holdFloating);
+      root.toggleAttribute("amaya-urlbar-floating", still);
+    }, 0);
   }
 
   async function applyCompact(win, compact, { initial = false } = {}) {

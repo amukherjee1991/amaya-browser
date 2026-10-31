@@ -1026,7 +1026,7 @@
 
 /* Address field while collapsed: hidden until Ctrl+L, then it floats at the
  * top of the page, centred, like the command bar. */
-:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-urlbar-slot:not(:focus-within) {
+:root[amaya-shell][amaya-compact]:not([amaya-urlbar-floating]) #sidebar-container:not([sidebar-launcher-expanded]) #amaya-urlbar-slot:not(:focus-within) {
   position: fixed;
   inset-block-start: calc(-4 * var(--amaya-layout-row));
   inset-inline-start: 0;
