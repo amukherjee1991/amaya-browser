@@ -13,6 +13,9 @@
   --amaya-shell-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --amaya-shell-duration: 200ms;
   --amaya-shell-inset: var(--amaya-layout-pane-gap);
+  /* The web view card is already inset from the window: split panes must
+     not add a second inset of their own. */
+  --amaya-split-inset: 0px;
 
   /* Frame */
   --toolbox-background-color: var(--amaya-surface-window);
@@ -667,6 +670,81 @@
   }
 }
 
+/* Tab groups as folders: a plain row with a chevron (no coloured pill), the
+   tabs indented behind a hairline. */
+:root[amaya-shell] #amaya-sidebar #tabbrowser-tabs[orient="vertical"][expanded] tab-group {
+  --tab-group-line-color: var(--amaya-border-subtle);
+  --tab-group-line-thickness: 1px;
+
+  > .tab-group-label-container {
+    margin: 0;
+    padding: var(--tab-padding-block-start) 0 var(--tab-padding-block-end);
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .tab-group-label-hover-highlight {
+    margin: 0;
+    padding: 0;
+    border-radius: var(--amaya-radius-md);
+    background: none;
+    box-shadow: none;
+  }
+
+  .tab-group-label {
+    position: relative;
+    min-height: var(--amaya-layout-row);
+    height: var(--amaya-layout-row);
+    max-width: none;
+    margin: 0;
+    padding: 0 10px 0 34px;
+    border-radius: var(--amaya-radius-md);
+    background: none;
+    color: var(--amaya-ink);
+    font: 500 13px/var(--amaya-layout-row) var(--amaya-font-ui);
+    text-align: start;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 10px;
+      top: 10px;
+      width: 16px;
+      height: 16px;
+      background-color: var(--amaya-ink-muted);
+      mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') center / 16px 16px no-repeat;
+    }
+
+    &:hover {
+      background: var(--amaya-surface-page);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--amaya-focus-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  &[collapsed] .tab-group-label::before {
+    transform: rotate(-90deg);
+  }
+
+  > .tabbrowser-tab,
+  > tab-split-view-wrapper {
+    margin-inline-start: 16px;
+    padding-inline-start: 8px;
+  }
+
+  .tab-group-line {
+    width: 1px;
+    inset-inline-start: -8px !important;
+    inset-block: 0 !important;
+    border-radius: 0;
+  }
+}
+
 /* Pinned tabs: a 3-column grid of 44px tiles */
 :root[amaya-shell] #amaya-sidebar #pinned-tabs-container[orient="vertical"] {
   min-height: 0;
@@ -948,7 +1026,7 @@
 
 /* Address field while collapsed: hidden until Ctrl+L, then it floats at the
  * top of the page, centred, like the command bar. */
-:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-urlbar-slot:not(:focus-within) {
+:root[amaya-shell][amaya-compact]:not([amaya-urlbar-floating]) #sidebar-container:not([sidebar-launcher-expanded]) #amaya-urlbar-slot:not(:focus-within) {
   position: fixed;
   inset-block-start: calc(-4 * var(--amaya-layout-row));
   inset-inline-start: 0;

@@ -4,6 +4,9 @@
 .amaya-glance-layer {
   position: absolute;
   inset: 0;
+  /* Above split view's gutters (z-index 1) in the shared overlay root, below
+     popovers such as the command bar and privacy panel (z-index 10). */
+  z-index: 5;
   pointer-events: auto;
   font: 400 13px/16px var(--amaya-font-ui);
   color: var(--amaya-ink);

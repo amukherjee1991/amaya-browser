@@ -290,7 +290,12 @@
         if (typeof off == "function") {
           this._cleanup.push(off);
         }
-        let off2 = ui.on("register-commands", () => this.registerCommands());
+        let off2 = ui.on("register-commands", e => {
+          let add = e?.detail?.add;
+          if (typeof add == "function") {
+            this.registerCommands(add);
+          }
+        });
         if (typeof off2 == "function") {
           this._cleanup.push(off2);
         }
@@ -428,6 +433,9 @@
         canHandle: false,
         paused: false,
         upgraded: false,
+        // Loopback pages over http count as secure ("potentially
+        // trustworthy") but are not HTTPS.
+        https: uri?.scheme == "https",
         counts: { trackers: 0, fingerprinters: 0, apart: 0 },
       };
 
@@ -759,7 +767,7 @@
             : cat == "custom"
               ? "Custom blocking"
               : "Standard blocking",
-          s.upgraded ? "Upgraded to HTTPS" : "HTTPS",
+          s.upgraded ? "Upgraded to HTTPS" : s.https ? "HTTPS" : "Local connection",
         ];
         if (this.spaceName) {
           parts.push(`${this.spaceName} space`);
@@ -969,17 +977,29 @@
       }
     }
 
-    registerCommands() {
-      if (typeof ui.emit != "function") {
+    /**
+     * Without `add`: register with the command bar (contract event). With
+     * `add` (the bar's open-time "register-commands" event): hand the commands
+     * to it directly. Emitting "register-command" from inside that event makes
+     * the open bar rebuild its list, fire the event again, and loop forever.
+     */
+    registerCommands(add = null) {
+      if (!add && typeof ui.emit != "function") {
         return;
       }
       let showPanel = () => this.open({ animate: false, focusFirst: true });
+      // Offer only the switch that changes something for the current page.
+      let site = () => {
+        let s = this.computeState();
+        return s.canHandle ? (s.paused ? "paused" : "on") : "none";
+      };
       let cmds = [
         {
           id: "privacy.site-off",
           label: "Turn protection off for this site",
           icon: "pause",
           hint: "Privacy",
+          when: () => site() == "on",
           run: () => this.setSiteBlocking(false),
         },
         {
@@ -987,6 +1007,7 @@
           label: "Turn protection on for this site",
           icon: "shield",
           hint: "Privacy",
+          when: () => site() == "paused",
           run: () => this.setSiteBlocking(true),
         },
         {
@@ -1001,6 +1022,7 @@
           label: "Fingerprint protection: Balanced",
           icon: "shield",
           hint: "Privacy",
+          when: () => chosenFpMode() != "balanced",
           run: () => {
             this.setFpMode("balanced");
             showPanel();
@@ -1011,6 +1033,7 @@
           label: "Fingerprint protection: Uniform",
           icon: "shield",
           hint: "Privacy",
+          when: () => chosenFpMode() != "uniform",
           run: () => {
             this.setFpMode("uniform");
             showPanel();
@@ -1039,7 +1062,11 @@
         },
       ];
       for (let c of cmds) {
-        ui.emit("register-command", c);
+        if (add) {
+          add(c);
+        } else {
+          ui.emit("register-command", c);
+        }
       }
     }
   }
