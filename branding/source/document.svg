@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Generic Amaya document icon (HTML files etc.): a page with the mark. -->
+  <defs>
+    <linearGradient id="amaya-doc-arch" x1="32" y1="16" x2="224" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#45D0E3"/>
+      <stop offset="1" stop-color="#4A55E0"/>
+    </linearGradient>
+  </defs>
+  <path fill="#F4F6FB" stroke="#8A90B0" stroke-width="8" stroke-linejoin="round" d="M44 12H164L212 60V240Q212 244 208 244H48Q44 244 44 240V16Q44 12 48 12Z"/>
+  <path fill="#D5DAEC" stroke="#8A90B0" stroke-width="8" stroke-linejoin="round" d="M164 12V56Q164 60 168 60H212Z"/>
+  <g transform="translate(76 96) scale(0.40625)">
+    <path fill="url(#amaya-doc-arch)" d="M32 149A140 140 0 0 1 128 16.1A140 140 0 0 1 224 149V232Q224 240 216 240H184Q176 240 176 232V160A70 70 0 0 0 128 93.6A70 70 0 0 0 80 160V232Q80 240 72 240H40Q32 240 32 232Z"/>
+    <circle fill="#FFC861" cx="128" cy="192" r="16"/>
+  </g>
+</svg>
