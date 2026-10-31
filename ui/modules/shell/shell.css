@@ -670,6 +670,81 @@
   }
 }
 
+/* Tab groups as folders: a plain row with a chevron (no coloured pill), the
+   tabs indented behind a hairline. */
+:root[amaya-shell] #amaya-sidebar #tabbrowser-tabs[orient="vertical"][expanded] tab-group {
+  --tab-group-line-color: var(--amaya-border-subtle);
+  --tab-group-line-thickness: 1px;
+
+  > .tab-group-label-container {
+    margin: 0;
+    padding: var(--tab-padding-block-start) 0 var(--tab-padding-block-end);
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .tab-group-label-hover-highlight {
+    margin: 0;
+    padding: 0;
+    border-radius: var(--amaya-radius-md);
+    background: none;
+    box-shadow: none;
+  }
+
+  .tab-group-label {
+    position: relative;
+    min-height: var(--amaya-layout-row);
+    height: var(--amaya-layout-row);
+    max-width: none;
+    margin: 0;
+    padding: 0 10px 0 34px;
+    border-radius: var(--amaya-radius-md);
+    background: none;
+    color: var(--amaya-ink);
+    font: 500 13px/var(--amaya-layout-row) var(--amaya-font-ui);
+    text-align: start;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 10px;
+      top: 10px;
+      width: 16px;
+      height: 16px;
+      background-color: var(--amaya-ink-muted);
+      mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') center / 16px 16px no-repeat;
+    }
+
+    &:hover {
+      background: var(--amaya-surface-page);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--amaya-focus-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  &[collapsed] .tab-group-label::before {
+    transform: rotate(-90deg);
+  }
+
+  > .tabbrowser-tab,
+  > tab-split-view-wrapper {
+    margin-inline-start: 16px;
+    padding-inline-start: 8px;
+  }
+
+  .tab-group-line {
+    width: 1px;
+    inset-inline-start: -8px !important;
+    inset-block: 0 !important;
+    border-radius: 0;
+  }
+}
+
 /* Pinned tabs: a 3-column grid of 44px tiles */
 :root[amaya-shell] #amaya-sidebar #pinned-tabs-container[orient="vertical"] {
   min-height: 0;
