@@ -290,7 +290,12 @@
         if (typeof off == "function") {
           this._cleanup.push(off);
         }
-        let off2 = ui.on("register-commands", () => this.registerCommands());
+        let off2 = ui.on("register-commands", e => {
+          let add = e?.detail?.add;
+          if (typeof add == "function") {
+            this.registerCommands(add);
+          }
+        });
         if (typeof off2 == "function") {
           this._cleanup.push(off2);
         }
@@ -969,8 +974,14 @@
       }
     }
 
-    registerCommands() {
-      if (typeof ui.emit != "function") {
+    /**
+     * Without `add`: register with the command bar (contract event). With
+     * `add` (the bar's open-time "register-commands" event): hand the commands
+     * to it directly. Emitting "register-command" from inside that event makes
+     * the open bar rebuild its list, fire the event again, and loop forever.
+     */
+    registerCommands(add = null) {
+      if (!add && typeof ui.emit != "function") {
         return;
       }
       let showPanel = () => this.open({ animate: false, focusFirst: true });
@@ -1039,7 +1050,11 @@
         },
       ];
       for (let c of cmds) {
-        ui.emit("register-command", c);
+        if (add) {
+          add(c);
+        } else {
+          ui.emit("register-command", c);
+        }
       }
     }
   }
