@@ -307,11 +307,19 @@
         },
       },
     ];
+    // The shared registry reaches the command bar even though this module
+    // loads before it; the event covers a bar that is already running.
+    const registry = (ui.commands ||= []);
     for (const c of cmds) {
+      registry.push(c);
       ui.emit("register-command", c);
     }
     state.cleanups.push(() => {
       for (const c of cmds) {
+        const i = registry.indexOf(c);
+        if (i >= 0) {
+          registry.splice(i, 1);
+        }
         ui.emit("unregister-command", { id: c.id });
       }
     });
