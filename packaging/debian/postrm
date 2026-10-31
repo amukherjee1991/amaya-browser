@@ -1,0 +1,35 @@
+#!/bin/sh
+# postrm for amaya (template: build-deb.sh fills in @KEYRING_B64@)
+set -e
+
+KEYRING=/usr/share/keyrings/amaya-archive-keyring.gpg
+SOURCES=/etc/apt/sources.list.d/amaya.sources
+
+case "$1" in
+    remove)
+        # dpkg keeps the conffile amaya.sources until purge but has just
+        # removed the keyring it names, which would make every `apt update`
+        # fail. Put the key back (no longer owned by the package) so the
+        # source keeps working and `apt install amaya` still finds Amaya.
+        if [ -f "$SOURCES" ] && [ ! -e "$KEYRING" ]; then
+            mkdir -p "${KEYRING%/*}"
+            echo '@KEYRING_B64@' | base64 -d >"$KEYRING.tmp"
+            chmod 0644 "$KEYRING.tmp"
+            mv -f "$KEYRING.tmp" "$KEYRING"
+        fi
+        ;;
+    purge)
+        # dpkg deletes the conffile on purge; the key copy above is ours.
+        if [ ! -e "$SOURCES" ] && ! dpkg-query -S "$KEYRING" >/dev/null 2>&1; then
+            rm -f "$KEYRING"
+        fi
+        ;;
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+    *)
+        echo "postrm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

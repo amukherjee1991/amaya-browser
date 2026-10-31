@@ -18,6 +18,15 @@
 #   AMAYA_HOMEPAGE          Homepage URL (default: derived from git remote
 #                           "origin", else a placeholder)
 #   SOURCE_DATE_EPOCH       timestamp for files/changelog (default: last commit)
+#   AMAYA_APT_URI           apt repository the package registers
+#                           (default: https://amaya.arghyam.me/apt/)
+#   AMAYA_APT_KEYRING       its public signing key, binary OpenPGP
+#                           (default: apt-repo/amaya-archive-keyring.gpg)
+#
+# Like Chrome's packages, the .deb ships the apt source for its own repository
+# (/etc/apt/sources.list.d/amaya.sources, a conffile) and the key that signs it
+# (/usr/share/keyrings/amaya-archive-keyring.gpg), so after one manual install
+# updates arrive through apt / Software Updater.
 #
 # Needs: bash, coreutils, findutils, gzip, dpkg-deb. Optional: dpkg-shlibdeps.
 # No root required (dpkg-deb --root-owner-group).
@@ -104,6 +113,7 @@ trap 'rm -rf "$WORK"' EXIT
 ROOT=$WORK/debian/$PKG
 mkdir -p "$ROOT/DEBIAN" "$ROOT$LIBDIR" "$ROOT/usr/bin" \
     "$ROOT/usr/share/applications" "$ROOT/usr/share/metainfo" \
+    "$ROOT/usr/share/keyrings" "$ROOT/etc/apt/sources.list.d" \
     "$ROOT/usr/share/doc/$PKG" "$ROOT/usr/share/man/man1"
 
 log "copying application from $APPDIR"
@@ -133,12 +143,36 @@ chmod 0755 "$ROOT/usr/bin/amaya"
 # Desktop entry, AppStream metadata, man page.
 install -m 0644 "$SCRIPT_DIR/$APP_ID.desktop" "$ROOT/usr/share/applications/$APP_ID.desktop"
 RELEASE_DATE=$(date -u -d "@$SOURCE_DATE_EPOCH" +%Y-%m-%d)
-sed -e "s/@VERSION@/$UPSTREAM_VERSION/g" -e "s/@DATE@/$RELEASE_DATE/g" \
+# The release carries the full Amaya version (159.0-4), matching the apt
+# repository's AppStream catalog.
+sed -e "s/@VERSION@/$DEBVERSION/g" -e "s/@DATE@/$RELEASE_DATE/g" \
     -e "s|@HOMEPAGE@|$HOMEPAGE|g" \
     -e '/<!-- Template:.*-->/d' \
     "$SCRIPT_DIR/$APP_ID.metainfo.xml.in" >"$ROOT/usr/share/metainfo/$APP_ID.metainfo.xml"
 chmod 0644 "$ROOT/usr/share/metainfo/$APP_ID.metainfo.xml"
 gzip -9n <"$SCRIPT_DIR/amaya.1" >"$ROOT/usr/share/man/man1/amaya.1.gz"
+
+# --- apt repository (source + signing key) ----------------------------------
+APT_URI=${AMAYA_APT_URI:-https://amaya.arghyam.me/apt/}
+APT_KEYRING=${AMAYA_APT_KEYRING:-$SCRIPT_DIR/apt-repo/amaya-archive-keyring.gpg}
+KEYRING_PATH=/usr/share/keyrings/amaya-archive-keyring.gpg
+SOURCES_PATH=/etc/apt/sources.list.d/amaya.sources
+[ -s "$APT_KEYRING" ] || die "apt signing key not found: $APT_KEYRING"
+# apt (gpgv/sqv) wants a binary keyring at a .gpg path, not an armored key.
+[ "$(head -c 5 "$APT_KEYRING")" != "-----" ] \
+    || die "$APT_KEYRING is armored; export it with gpg --export (no --armor)"
+install -m 0644 "$APT_KEYRING" "$ROOT$KEYRING_PATH"
+cat >"$ROOT$SOURCES_PATH" <<EOF
+# Amaya Browser updates, installed by the amaya package. To stop updates from
+# this source, add "Enabled: no" below; your change is kept on upgrade.
+Types: deb
+URIs: $APT_URI
+Suites: stable
+Components: main
+Architectures: $ARCH
+Signed-By: $KEYRING_PATH
+EOF
+chmod 0644 "$ROOT$SOURCES_PATH"
 
 # --- icons ------------------------------------------------------------------
 HICOLOR=$ROOT/usr/share/icons/hicolor
@@ -229,8 +263,12 @@ DEPENDS=$(printf '%s' "$DEPENDS" | tr -s ' ')
 rm -f "$WORK/debian/control"
 
 # --- DEBIAN/ ----------------------------------------------------------------
+install -m 0755 "$SCRIPT_DIR/preinst" "$ROOT/DEBIAN/preinst"
 install -m 0755 "$SCRIPT_DIR/postinst" "$ROOT/DEBIAN/postinst"
 install -m 0755 "$SCRIPT_DIR/prerm" "$ROOT/DEBIAN/prerm"
+keyring_b64=$(base64 -w0 "$APT_KEYRING")
+sed "s|@KEYRING_B64@|$keyring_b64|" "$SCRIPT_DIR/postrm" >"$ROOT/DEBIAN/postrm"
+chmod 0755 "$ROOT/DEBIAN/postrm"
 
 INSTALLED_SIZE=$(du -sk --apparent-size --exclude=DEBIAN "$ROOT" | cut -f1)
 control=$(<"$SCRIPT_DIR/control.in")
@@ -242,10 +280,14 @@ control=${control//@INSTALLED_SIZE@/"$INSTALLED_SIZE"}
 control=${control//@DEPENDS@/"$DEPENDS"}
 control=${control//@RECOMMENDS@/"$RECOMMENDS"}
 printf '%s\n' "$control" >"$ROOT/DEBIAN/control"
+# Everything under /etc is a conffile: local edits (e.g. "Enabled: no") survive
+# upgrades.
+printf '%s\n' "$SOURCES_PATH" >"$ROOT/DEBIAN/conffiles"
 
-(cd "$ROOT" && find . -path ./DEBIAN -prune -o -type f -printf '%P\0' \
+# md5sums lists non-conffiles only (dpkg tracks conffile hashes itself).
+(cd "$ROOT" && find . \( -path ./DEBIAN -o -path ./etc \) -prune -o -type f -printf '%P\0' \
     | sort -z | xargs -0 -r md5sum) >"$ROOT/DEBIAN/md5sums"
-chmod 0644 "$ROOT/DEBIAN/control" "$ROOT/DEBIAN/md5sums"
+chmod 0644 "$ROOT/DEBIAN/control" "$ROOT/DEBIAN/md5sums" "$ROOT/DEBIAN/conffiles"
 
 find "$ROOT" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 

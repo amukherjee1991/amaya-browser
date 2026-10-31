@@ -1,0 +1,29 @@
+#!/bin/sh
+# preinst for amaya
+set -e
+
+SOURCES=/etc/apt/sources.list.d/amaya.sources
+
+case "$1" in
+    install|upgrade)
+        # An amaya.sources that dpkg does not track as our conffile yet comes
+        # from the manual apt setup on the website (or a hand edit before this
+        # package shipped the file). It points at the same repository, so drop
+        # it and let the package's conffile take over instead of stopping the
+        # install or upgrade with a conffile question.
+        # shellcheck disable=SC2016  # ${Conffiles} is a dpkg-query field
+        if [ -f "$SOURCES" ] && grep -q 'amaya\.arghyam\.me/apt' "$SOURCES" \
+            && ! dpkg-query -W -f='${Conffiles}\n' amaya 2>/dev/null \
+                | grep -q "^ $SOURCES "; then
+            rm -f "$SOURCES"
+        fi
+        ;;
+    abort-upgrade)
+        ;;
+    *)
+        echo "preinst called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

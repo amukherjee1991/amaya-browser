@@ -82,7 +82,17 @@ sha256sum -c dist/*.sha256
 git push origin main v159.0-1
 ```
 
-Publish the `.deb` (see `docs/forgejo-setup.md` §2):
+The apt repository at <https://amaya.arghyam.me/apt/> (the one the `.deb`
+registers) updates itself: the website's `sync-release.py` timer mirrors the
+newest GitHub release every 6 h and runs
+`packaging/debian/apt-repo/build-apt-repo.py` on the new `.deb`. To publish
+at once instead, run on the web host:
+
+```sh
+packaging/debian/apt-repo/build-apt-repo.py --repo ~/amaya-apt --deb dist/amaya_159.0-1_amd64.deb
+```
+
+Optionally also publish to Forgejo's registry (see `docs/forgejo-setup.md` §2):
 
 ```sh
 FORGEJO_URL=https://<forgejo-host> FORGEJO_OWNER=<owner> FORGEJO_USER=<you> \
@@ -96,6 +106,7 @@ advisory link, plus Amaya changes since the previous tag.
 ## 5. After release
 
 * `sudo apt update && apt policy amaya` on a test machine shows the new
-  version from the repository, and an upgrade from the previous version works.
+  version from `https://amaya.arghyam.me/apt`, and an upgrade from the
+  previous version works (Software Updater lists it).
 * If something is wrong, do not delete and re-upload the same version.
   Ship `159.0-2`.

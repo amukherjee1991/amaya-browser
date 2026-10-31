@@ -12,6 +12,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 BUILD_DEB=$SCRIPT_DIR/build-deb.sh
+KEYRING=$SCRIPT_DIR/apt-repo/amaya-archive-keyring.gpg
 VERSION=159.0-1
 APP_ID=org.amaya.Browser
 
@@ -112,7 +113,9 @@ inspect_deb() {
         "./usr/share/metainfo/$APP_ID.metainfo.xml" \
         ./usr/share/doc/amaya/copyright ./usr/share/doc/amaya/changelog.Debian.gz \
         ./usr/share/man/man1/amaya.1.gz \
-        "./usr/share/icons/hicolor/48x48/apps/$APP_ID.png"; do
+        "./usr/share/icons/hicolor/48x48/apps/$APP_ID.png" \
+        ./usr/share/keyrings/amaya-archive-keyring.gpg \
+        ./etc/apt/sources.list.d/amaya.sources; do
         check "contains $p" grep -q " $p\$" <<<"$contents"
     done
     check "owned by root/root" bash -c "! grep -v ' root/root ' <<<\"\$1\"" _ "$contents"
@@ -123,10 +126,31 @@ inspect_deb() {
     check "launcher execs /usr/lib/amaya/amaya" grep -q 'exec /usr/lib/amaya/amaya "\$@"' "$x/usr/bin/amaya"
     check "postinst syntax" sh -n "$x/DEBIAN/postinst"
     check "prerm syntax" sh -n "$x/DEBIAN/prerm"
+    check "preinst syntax" sh -n "$x/DEBIAN/preinst"
+    check "postrm syntax" sh -n "$x/DEBIAN/postrm"
+    check "postrm and preinst are executable" test -x "$x/DEBIAN/postrm" -a -x "$x/DEBIAN/preinst"
+    check "postrm embeds the repo key" cmp -s <(sed -n "s/^ *echo '\\([A-Za-z0-9+\\/=]*\\)' | base64 -d.*/\\1/p" "$x/DEBIAN/postrm" | base64 -d) "$KEYRING"
+    # apt repository: the source is a conffile, the key a binary keyring.
+    check "conffiles lists exactly amaya.sources" \
+        test "$(cat "$x/DEBIAN/conffiles")" = /etc/apt/sources.list.d/amaya.sources
+    check "md5sums leaves out conffiles" bash -c "! grep -q ' etc/' '$x/DEBIAN/md5sums'"
+    check "keyring is the repo's public key" cmp -s "$KEYRING" "$x/usr/share/keyrings/amaya-archive-keyring.gpg"
+    check "keyring is binary, not armored" bash -c "! head -c 5 '$x/usr/share/keyrings/amaya-archive-keyring.gpg' | grep -q -- -----"
+    local src=$x/etc/apt/sources.list.d/amaya.sources
+    check "sources: Types: deb" grep -qx 'Types: deb' "$src"
+    check "sources: URIs" grep -qx 'URIs: https://amaya.arghyam.me/apt/' "$src"
+    check "sources: Suites: stable" grep -qx 'Suites: stable' "$src"
+    check "sources: Components: main" grep -qx 'Components: main' "$src"
+    check "sources: Architectures matches the package" \
+        grep -qx "Architectures: $(dpkg-deb -f "$deb" Architecture)" "$src"
+    check "sources: Signed-By the shipped keyring" \
+        grep -qx 'Signed-By: /usr/share/keyrings/amaya-archive-keyring.gpg' "$src"
+    check "sources is 0644" grep -q -- '-rw-r--r-- .* ./etc/apt/sources.list.d/amaya.sources$' <<<"$contents"
     check "postinst is executable" test -x "$x/DEBIAN/postinst"
     check "postinst registers x-www-browser" grep -q 'x-www-browser /usr/bin/amaya 40' "$x/DEBIAN/postinst"
     check "changelog mentions version" bash -c "gzip -dc '$x/usr/share/doc/amaya/changelog.Debian.gz' | grep -q '($VERSION)'"
-    check "metainfo has release 159.0" grep -q 'release version="159.0"' "$x/usr/share/metainfo/$APP_ID.metainfo.xml"
+    check "metainfo release carries the full version $VERSION" \
+        grep -q "release version=\"$VERSION\"" "$x/usr/share/metainfo/$APP_ID.metainfo.xml"
     check "md5sums verify" bash -c "cd '$x' && md5sum --quiet -c DEBIAN/md5sums"
 
     if command -v desktop-file-validate >/dev/null; then
@@ -143,11 +167,13 @@ inspect_deb() {
         # Errors fail the test; warnings are printed for review (the fake
         # payload triggers some that cannot occur with a real build).
         # initial-upload-closes-no-bugs only matters for uploads to Debian.
+        # package-installs-apt-sources is deliberate: like Chrome's .deb, Amaya
+        # registers its own signed repository (Debian archive packages may not).
         # AMAYA_LINTIAN_ARGS (e.g. "-I --pedantic") adds extra lintian flags.
         local -a extra
         read -r -a extra <<<"${AMAYA_LINTIAN_ARGS:-}"
         if lintian --fail-on error --tag-display-limit 0 "${extra[@]}" \
-            --suppress-tags initial-upload-closes-no-bugs \
+            --suppress-tags initial-upload-closes-no-bugs,package-installs-apt-sources \
             "$deb" >"$TMP/lintian.log" 2>&1; then
             pass "lintian (no errors)"
         else
@@ -185,6 +211,7 @@ check "fallback Depends has libgtk-3" bash -c \
 echo "== build 4: bad input is rejected"
 check "rejects version without revision" bash -c "! '$BUILD_DEB' '$APP' 159.0 '$TMP/out4' 2>/dev/null"
 check "rejects missing app dir" bash -c "! '$BUILD_DEB' '$TMP/nope' '$VERSION' '$TMP/out4' 2>/dev/null"
+check "rejects an armored keyring" bash -c "! AMAYA_APT_KEYRING='$SCRIPT_DIR/apt-repo/amaya-archive-keyring.asc' '$BUILD_DEB' '$APP' '$VERSION' '$TMP/out4' 2>/dev/null"
 
 echo
 if [ "$fails" -eq 0 ]; then
