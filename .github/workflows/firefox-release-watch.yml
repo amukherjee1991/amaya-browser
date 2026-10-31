@@ -1,0 +1,47 @@
+# Checks Mozilla's release feed and opens an issue when a newer Firefox ships
+# than the version pinned in upstream.json. One issue per version, never duplicated.
+name: Firefox release watch
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compare with Mozilla's latest release
+        id: check
+        run: |
+          python3 tools/firefox_release_watch.py > result.json
+          cat result.json
+          echo "newer=$(python3 -c 'import json;print(str(json.load(open("result.json"))["newer"]).lower())')" >> "$GITHUB_OUTPUT"
+          echo "latest=$(python3 -c 'import json;print(json.load(open("result.json"))["latest"])')" >> "$GITHUB_OUTPUT"
+
+      - name: Open an issue for the new version
+        if: steps.check.outputs.newer == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          gh label create upstream-release --color 0E6556 --description "New Firefox release to rebase onto" 2>/dev/null || true
+          existing=$(gh issue list --label upstream-release --state all --limit 500 --json title \
+            --jq "[.[] | select(.title | startswith(\"Firefox $LATEST is out\"))] | length")
+          if [ "$existing" != "0" ]; then
+            echo "An issue for Firefox $LATEST already exists; nothing to do."
+            exit 0
+          fi
+          python3 -c 'import json;r=json.load(open("result.json"));open("title.txt","w").write(r["title"]);open("body.md","w").write(r["body"])'
+          gh issue create --title "$(cat title.txt)" --body-file body.md --label upstream-release
