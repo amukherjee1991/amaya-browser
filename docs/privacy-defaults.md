@@ -203,6 +203,8 @@ restart**. All values are defaults, so individual prefs can still be tuned.
 | `extensions.enabledScopes` | 5 | Load add-ons only from the profile and the app dir; ignore `~/.mozilla/extensions` and `/usr/lib/mozilla/extensions`. |
 | `extensions.startupScanScopes` | 0 | Firefox default, explicit. |
 | `media.eme.enabled` | false | DRM opt-in: Firefox shows an "enable DRM" bar on sites that need it; Widevine is not downloaded until then. OpenH264 (WebRTC) remains. |
+| `media.gmp-widevinecdm.enabled` | follows `media.eme.enabled` | Stops the Widevine download until DRM is turned on. |
+| `media.gmp-widevinecdm.allow-chromium-update` | false | Otherwise every plugin update check asks update.googleapis.com about Widevine, even with DRM off (found by Gate 1). |
 
 ### Security (kept on — never weakened)
 
