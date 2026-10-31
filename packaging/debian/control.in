@@ -1,0 +1,16 @@
+Package: amaya
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: @MAINTAINER@
+Installed-Size: @INSTALLED_SIZE@
+Depends: @DEPENDS@
+Recommends: @RECOMMENDS@
+Provides: gnome-www-browser, www-browser
+Section: web
+Priority: optional
+Homepage: @HOMEPAGE@
+Description: privacy-first web browser built on the Gecko engine
+ Amaya is a privacy-first browser built as a thin, auditable layer on
+ Mozilla's Gecko engine. It ships without telemetry, studies or sponsored
+ content, enables strict tracking protection, Total Cookie Protection and
+ HTTPS-only mode by default, and bundles a content blocker.

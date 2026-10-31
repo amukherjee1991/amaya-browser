@@ -1,0 +1,44 @@
+.TH AMAYA 1 "" "Amaya" "User Commands"
+.SH NAME
+amaya \- privacy-first web browser
+.SH SYNOPSIS
+.B amaya
+[\fIOPTIONS\fR] [\fIURL\fR|\fIFILE\fR]...
+.SH DESCRIPTION
+.B amaya
+is a privacy-first web browser built on Mozilla's Gecko engine.
+It accepts the same command-line options as Firefox.
+.SH OPTIONS
+.TP
+.B \-\-new\-window \fIURL\fR
+Open \fIURL\fR in a new window.
+.TP
+.B \-\-new\-tab \fIURL\fR
+Open \fIURL\fR in a new tab.
+.TP
+.B \-\-private\-window [\fIURL\fR]
+Open \fIURL\fR in a new private window.
+.TP
+.B \-P [\fIPROFILE\fR]
+Start with \fIPROFILE\fR, or show the profile manager.
+.TP
+.B \-\-ProfileManager
+Start with the profile manager.
+.TP
+.B \-\-safe\-mode
+Disable extensions and themes for this session.
+.TP
+.B \-\-headless
+Run without a user interface.
+.TP
+.B \-\-help
+Print the full list of options.
+.SH FILES
+.TP
+.I /usr/lib/amaya/
+Application directory.
+.TP
+.I /usr/lib/amaya/distribution/policies.json
+Enterprise policies shipped with Amaya.
+.SH SEE ALSO
+.BR x-www-browser (1)

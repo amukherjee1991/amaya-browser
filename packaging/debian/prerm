@@ -1,0 +1,18 @@
+#!/bin/sh
+# prerm for amaya
+set -e
+
+case "$1" in
+    remove|deconfigure)
+        update-alternatives --remove x-www-browser /usr/bin/amaya
+        update-alternatives --remove gnome-www-browser /usr/bin/amaya
+        ;;
+    upgrade|failed-upgrade)
+        ;;
+    *)
+        echo "prerm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

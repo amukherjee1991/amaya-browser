@@ -1,0 +1,22 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Amaya Browser
+Source: https://archive.mozilla.org/pub/firefox/releases/
+Comment: Amaya is built from the Mozilla Firefox source release pinned in
+ upstream.json, with Amaya's own branding, settings and patches applied.
+ "Firefox" and the Firefox logos are trademarks of the Mozilla Foundation and
+ are not used in Amaya builds. The browser bundles third-party components
+ under additional licences (BSD, MIT, Apache-2.0, LGPL and others); their full
+ texts ship with the application and are shown at about:license.
+
+Files: *
+Copyright: 1998-2026 Mozilla Foundation and contributors
+           2026 Amaya Browser contributors
+License: MPL-2.0
+
+License: MPL-2.0
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ .
+ On Debian systems, the complete text of the Mozilla Public License
+ version 2.0 can be found in "/usr/share/common-licenses/MPL-2.0".

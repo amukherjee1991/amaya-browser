@@ -1,0 +1,28 @@
+#!/bin/sh
+# postinst for amaya
+set -e
+
+case "$1" in
+    configure|abort-upgrade|abort-remove|abort-deconfigure)
+        update-alternatives --install /usr/bin/x-www-browser \
+            x-www-browser /usr/bin/amaya 40
+        update-alternatives --install /usr/bin/gnome-www-browser \
+            gnome-www-browser /usr/bin/amaya 40
+
+        # dpkg file triggers from desktop-file-utils / hicolor-icon-theme
+        # normally handle this; refresh explicitly for minimal systems.
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q /usr/share/applications || true
+        fi
+        if command -v gtk-update-icon-cache >/dev/null 2>&1 \
+            && [ -f /usr/share/icons/hicolor/index.theme ]; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+        fi
+        ;;
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
