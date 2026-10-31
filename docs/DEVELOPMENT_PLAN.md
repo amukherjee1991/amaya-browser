@@ -105,6 +105,9 @@ After merge: integration build on this machine → Gate 0 → Gate 1.
 ## 7. Git & Forgejo conventions
 
 * `main` is always buildable; work happens on `feat/*`, `fix/*`, `rebase/fx-NNN` branches.
+* **Local test branch `test/local`**: feature branches are merged here first (`--no-ff`), then built and tested
+  locally (`tools/amaya import && build && package`, unit tests, `tests/privacy/run.sh`). Only a green `test/local`
+  is merged into `main`. This replaces CI until Forgejo CI is set up.
 * Conventional commit subjects (`feat(privacy): …`, `build: …`, `ci: …`).
 * Firefox upgrades: `tools/amaya rebase <version>` on a `rebase/fx-<version>` branch → PR; target ≤ 48 h after each Firefox security release.
 * Every patch file carries `Reason:` and `Owner:` headers; `tools/amaya lint-patches` rejects patches without them (run locally; CI deferred).
