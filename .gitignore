@@ -1,0 +1,9 @@
+# Upstream Firefox source tree (fetched by `tools/amaya fetch`, never committed)
+/engine/
+/.cache/
+/dist/
+/obj-*/
+*.pyc
+__pycache__/
+.venv/
+.DS_Store
