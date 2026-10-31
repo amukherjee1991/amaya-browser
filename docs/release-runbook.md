@@ -68,6 +68,11 @@ Run on the merge commit, before tagging:
 - [ ] **Idle-traffic test green:** `tests/privacy/run.sh <path-to-amaya>`
       (fresh profile, 5 min idle, zero connections outside
       `tests/privacy/allowlist.json`).
+- [ ] **Comparative benchmarks run for this version** (once per release, not
+      continuously): run the benchmark suite from the private test repo
+      against the build being released. It compares Amaya with the current
+      Firefox, Chrome, Brave, LibreWolf and Mullvad Browser and publishes
+      the results for this version to the website's benchmarks page.
 - [ ] `.deb` installs on a clean Debian 13 VM (and Ubuntu 24.04), launches
       as "Amaya" with the Amaya icon, and appears as an `x-www-browser`
       alternative.
