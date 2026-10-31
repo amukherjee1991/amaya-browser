@@ -344,8 +344,8 @@
   }
 
   function moveChromeIntoTopRow(win, doc, top) {
-    // The app menu ("the single overflow menu"), plus the extensions button,
-    // kept invisible next to it as the extensions panel's anchor.
+    // The app menu ("the single overflow menu"). The extensions button is
+    // placed by the extensions module.
     const menuItem = doc.getElementById("PanelUI-button");
     if (menuItem) {
       moveNode(menuItem, top);
@@ -353,10 +353,6 @@
       if (btn && !btn.getAttribute("aria-label")) {
         setAttr(btn, "aria-label", "Menu");
       }
-    }
-    const ext = doc.getElementById("unified-extensions-button");
-    if (ext) {
-      moveNode(ext, top);
     }
 
     // Native window controls (Linux/Windows client-side decorations, macOS
@@ -370,37 +366,6 @@
         moveNode(box, top);
       }
     }
-  }
-
-  function addExtensionsMenuItem(win, doc) {
-    // "Extension buttons go in a menu": add an Extensions entry to the app
-    // menu that opens the native extensions panel.
-    let view;
-    try {
-      view = win.PanelMultiView.getViewNode(doc, "appMenu-mainView");
-    } catch (e) {
-      view = null;
-    }
-    const body = view?.querySelector(".panel-subview-body");
-    if (!body || doc.getElementById("amaya-appmenu-extensions")) {
-      return;
-    }
-    const item = doc.createXULElement("toolbarbutton");
-    item.id = "amaya-appmenu-extensions";
-    item.className = "subviewbutton";
-    item.setAttribute("label", "Extensions");
-    item.addEventListener("command", e => {
-      win.PanelUI.hide();
-      win.setTimeout(() => {
-        win.gUnifiedExtensions?.togglePanel(null, "amaya_menu");
-      }, 0);
-      e.stopPropagation();
-    });
-    const anchor =
-      body.querySelector("#appMenu-extensions-themes-button") ||
-      body.querySelector("#appMenu-passwords-button");
-    body.insertBefore(item, anchor ? anchor : null);
-    state.cleanups.push(() => item.remove());
   }
 
   function injectShadowStyles(win, sidebarMain) {
@@ -532,9 +497,9 @@
       moveNode(urlbar, slot);
     }
 
-    // Hide the top bar: collapsed (not just display:none) so extension
-    // buttons overflow into the extensions panel.
-    setAttr(doc.getElementById("nav-bar"), "collapsed", "true");
+    // The top bar is hidden by shell.css (display: none, not collapsed, so
+    // Firefox does not treat it as a collapsed toolbar and pull pinned
+    // extensions out of it: the extensions module shows those).
 
     injectShadowStyles(win, sidebarMain);
     relabelNewTab(doc);
@@ -548,12 +513,6 @@
       }
     } catch (e) {
       log("toggle-compact listener", e);
-    }
-
-    // App menu "Extensions" entry once the menu exists.
-    const panel = doc.getElementById("appMenu-popup");
-    if (panel) {
-      listen(panel, "popupshowing", () => addExtensionsMenuItem(win, doc));
     }
 
     // Default width 264 + the window inset, unless the user resized it.

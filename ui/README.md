@@ -55,7 +55,7 @@ Each module lives in `modules/<name>/` and owns only that folder.
 | `whenAnchor(id, cb)` | Calls `cb(el)` once the anchor exists (shell may build it after you) |
 | `overlayRoot` | A full-window `html:div#amaya-overlay-root` above the content area for floating UI (command bar, Glance, popovers). Pointer-events none by default; children set their own. |
 | `h(tag, props, ...children)` | Small HTML element helper (`html:` namespace) |
-| `icon(name)` | Inline SVG from the design system icon set (`shield, lock, plus, close, search, split, folder, chevron, sidebar, open-in-tab, sound, gear, arrow, clock, grid, back, forward, warning, pause`) |
+| `icon(name)` | Inline SVG from the design system icon set (`shield, lock, plus, close, search, split, folder, chevron, sidebar, open-in-tab, sound, gear, arrow, clock, grid, back, forward, warning, pause, puzzle`) |
 | `prefs` | `Services.prefs` |
 | `store(name)` | `{ async read(), async write(obj) }` JSON file at `<profile>/amaya/<name>.json` |
 | `emit(type, detail)` / `on(type, fn)` | Window-level events between modules, `amaya:<type>` |
@@ -66,7 +66,7 @@ Each module lives in `modules/<name>/` and owns only that folder.
 | Id | Where | Used by |
 |---|---|---|
 | `amaya-sidebar` | The left sidebar column (Gecko's vertical-tabs sidebar, restyled) | shell |
-| `amaya-sidebar-top` | Top row: collapse, back, forward | shell |
+| `amaya-sidebar-top` | Top row: collapse, pinned extensions, Extensions button, back, forward, menu | shell, extensions |
 | `amaya-urlbar-slot` | Where the address field lives in the sidebar | shell (moves `#urlbar` here), privacy (shield) |
 | `amaya-pins` | 3-column pinned tiles grid | shell |
 | `amaya-sidebar-footer` | Bottom of the sidebar | spaces (switcher) |
@@ -91,6 +91,26 @@ Command bar actions: modules register with
 `Ctrl/Cmd+K` command bar · `Ctrl+1…9` switch space · `Alt+click` Glance ·
 `Ctrl+L` address field · `Ctrl+Alt+arrows` move split-pane focus · `Ctrl+Shift+S`
 toggle compact mode. Never animate keyboard-triggered UI.
+
+## Extensions and themes
+
+* The **extensions** module moves Firefox's own Extensions button
+  (`#unified-extensions-button`, puzzle icon) into the sidebar top row. It
+  opens the native extensions panel and is the anchor for install and
+  permission prompts and for extension popups.
+* Extensions the user pins ("Pin to toolbar") live in the hidden nav-bar for
+  Firefox; their real toolbar buttons are shown as up to three icons in the
+  top row (`#amaya-ext-pins`), as many as fit the sidebar width. The rest show
+  in the extensions panel with popups anchored to the Extensions button. The
+  nav-bar is therefore only `display: none`, never `collapsed`.
+* The command bar gets "Extensions", "Find extensions" (addons.mozilla.org)
+  and one "<name> sidebar" entry per extension sidebar (the native sidebar
+  launcher icons are hidden by the shell).
+* **Themes**: Amaya's tokens stay authoritative. A Firefox theme only decides
+  light or dark (Firefox maps it to the chrome's `prefers-color-scheme`,
+  which `tokens.css` follows); its colours are overridden in `shell.css`, so a
+  theme can never leave theme-coloured text on an Amaya background. Web
+  content pages such as about:addons still use the theme's accent.
 
 ## Style rules
 
@@ -125,4 +145,5 @@ The built app is `dist/stage/amaya/amaya` in the main checkout
 | `modules/cmdbar/` | cmdbar |
 | `modules/privacy/` | privacy |
 | `modules/home/` | home (new tab + first run) |
+| `modules/extensions/` | extensions (Extensions button, pinned extension icons, extension command bar entries) |
 | `modules/update/` | update (Linux update check and prompt; reads `amaya-ui/version.json` written by `tools/amaya stage`) |
