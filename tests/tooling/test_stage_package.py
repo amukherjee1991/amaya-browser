@@ -94,9 +94,27 @@ class StageTests(ToolTestCase):
             "modules/shell/shell.css",
             "modules/shell/shell.js",
             "tokens.css",
+            "version.json",
         ])
         self.assertEqual((dest / "loader.js").read_text(),
                          (ui / "loader.js").read_text())
+
+    def test_stage_writes_version_json(self):
+        self.write_ext()
+        self.write_ui()
+        src, sums = (json.loads((self.repo / "upstream.json").read_text())[k]
+                     for k in ("source_url", "sha512sums_url"))
+        self.write_upstream(src, sums, amaya_revision=3)
+        with quiet():
+            stage(self.ctx(), self.appdir)
+        data = json.loads((self.appdir / "amaya-ui" / "version.json").read_text())
+        self.assertEqual(data, {"version": f"{self.version}-3"})
+        # Default revision is 1.
+        self.write_upstream(src, sums)
+        with quiet():
+            stage(self.ctx(), self.appdir)
+        data = json.loads((self.appdir / "amaya-ui" / "version.json").read_text())
+        self.assertEqual(data, {"version": f"{self.version}-1"})
 
     def test_stage_without_ui_warns(self):
         self.write_ext()

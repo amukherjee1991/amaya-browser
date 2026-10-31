@@ -11,6 +11,9 @@ Contract with settings/ (owned by the privacy work):
 Contract with ui/ (the Phase 2 workflow UI, see ui/README.md):
   ui/                       -> <appdir>/amaya-ui/  (replaced wholesale), minus
                                ui/design/, ui/tools/ and *.md files
+  upstream.json             -> <appdir>/amaya-ui/version.json
+                               {"version": "<firefox version>-<amaya_revision>"}
+                               (read by the update module)
 """
 
 from __future__ import annotations
@@ -72,7 +75,7 @@ def fetch_extension(ctx: Context, ext: dict) -> Path:
     return cached
 
 
-def stage_ui(ui_dir: Path, appdir: Path) -> bool:
+def stage_ui(ui_dir: Path, appdir: Path, version: str | None = None) -> bool:
     """Copy the workflow UI into <appdir>/amaya-ui/, replacing any old copy."""
     dest = appdir / UI_DEST
     if dest.is_symlink() or dest.is_file():
@@ -92,6 +95,9 @@ def stage_ui(ui_dir: Path, appdir: Path) -> bool:
 
     shutil.copytree(ui_dir, dest, ignore=ignore)
     info(f"staged ui/ -> {UI_DEST}/")
+    if version:
+        (dest / "version.json").write_text(json.dumps({"version": version}) + "\n")
+        info(f"staged {UI_DEST}/version.json ({version})")
     return True
 
 
@@ -108,7 +114,12 @@ def stage(ctx: Context, appdir: Path) -> None:
         else:
             warn(f"settings/{name} not found; skipping")
 
-    stage_ui(ctx.repo / "ui", appdir)
+    try:
+        version = ctx.upstream().deb_version
+    except AmayaError as e:
+        warn(f"{e}; amaya-ui/version.json not written")
+        version = None
+    stage_ui(ctx.repo / "ui", appdir, version)
 
     manifest = sdir / "extensions.json"
     if not manifest.is_file():
