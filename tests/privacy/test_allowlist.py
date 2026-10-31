@@ -6,6 +6,7 @@ import unittest
 from allowlist import Allowlist, AllowlistError, normalize_host
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+AMAYA_OWNED_HOSTS = {"amaya.arghyam.me"}
 
 
 def al(*entries):
@@ -121,7 +122,10 @@ class ValidationTest(unittest.TestCase):
                 self.assertIn(k, e)
         self.assertIsNone(a.match("incoming.telemetry.mozilla.org", 443))
         self.assertIsNone(a.match("push.services.mozilla.com", 443))
-        self.assertTrue(all(e.get("provisional") for e in raw["entries"]))
+        # Third-party hosts stay provisional until Gate 1 captures confirm
+        # them; only Amaya's own endpoints (defined by our code) may be firm.
+        firm = {e["host"] for e in raw["entries"] if not e.get("provisional")}
+        self.assertLessEqual(firm, AMAYA_OWNED_HOSTS)
         self.assertTrue(a.is_known_bad("incoming.telemetry.mozilla.org"))
 
 

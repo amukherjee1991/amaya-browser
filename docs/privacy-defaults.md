@@ -166,6 +166,12 @@ Translations remain available (local, on demand).
 | `dom.push.connection.enabled`, `dom.push.enabled` | false | **Decision:** no permanent WebSocket to Mozilla's push service. Trade-off: no web push notifications; Remote Settings uses its daily poll instead. |
 | `geo.provider.use_geoclue` true, `geo.provider.network.url` "" | — | Use the OS location service instead of Google's; only after permission. |
 
+### Update check
+
+| Pref | Default | Why |
+|---|---|---|
+| `amaya.update.enabled` | true (read by `ui/modules/update/`; unset = true) | Linux has no built-in updater (`--disable-updater`), so without this nobody learns about security fixes. The check is a GET of the static `https://amaya.arghyam.me/downloads/latest.json` ~60 s after start and every 12 h, with no cookies, referrer, custom headers or identifiers (see [network-calls.md](network-calls.md) §1). Set to false to stop automatic checks; "Check for updates" in the command bar still works. Nothing is installed without you pressing **Update**, and downloads are sha256-verified against `SHA256SUMS`. |
+
 ### Fingerprinting modes
 
 `amaya.fingerprinting.mode` (string, default `"balanced"`; unknown values fall
