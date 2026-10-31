@@ -1,0 +1,235 @@
+/* Amaya "home" module: first-run card and new tab page settings (chrome).
+ * Every value comes from tokens.css (--amaya-*). Component rules (button,
+ * toggle) follow ui/design/components and are scoped to this module so it
+ * does not depend on another module's stylesheet. */
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Used only when the loader's overlay root is missing. */
+.amaya-home-overlay-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+.amaya-home-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: var(--amaya-space-5);
+  overflow: auto;
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--amaya-surface-window) 72%, transparent);
+  color: var(--amaya-ink);
+  font: 400 15px/22px var(--amaya-font-ui);
+  box-sizing: border-box;
+}
+.amaya-home-scrim *,
+.amaya-home-scrim *::before,
+.amaya-home-scrim *::after { box-sizing: border-box; }
+.amaya-home-scrim [hidden] { display: none !important; }
+.amaya-home-scrim :focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+.amaya-home-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-5);
+  width: min(600px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: var(--amaya-space-6);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-lg);
+  background: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-popover);
+  color: var(--amaya-ink);
+}
+.amaya-home-card--settings { width: min(480px, 100%); gap: var(--amaya-space-4); padding: var(--amaya-space-5); }
+
+.amaya-home-head { display: flex; align-items: center; justify-content: space-between; gap: var(--amaya-space-3); }
+.amaya-home-counter { margin: 0; color: var(--amaya-ink-muted); font: 500 12px/16px var(--amaya-font-ui); }
+.amaya-home-progress { display: flex; gap: var(--amaya-space-1); margin: 0; padding: 0; list-style: none; }
+.amaya-home-progress li { width: 24px; height: 4px; border-radius: var(--amaya-radius-pill); background: var(--amaya-surface-sunken); }
+.amaya-home-progress li.is-done { background: var(--amaya-brand); }
+
+.amaya-home-step { display: flex; flex-direction: column; gap: var(--amaya-space-3); }
+.amaya-home-title {
+  margin: 0;
+  font: 500 32px/40px var(--amaya-font-display);
+  color: var(--amaya-ink);
+}
+.amaya-home-title:focus { outline: none; }
+.amaya-home-title--sm { font: 600 22px/28px var(--amaya-font-ui); }
+.amaya-home-lead { margin: 0 0 var(--amaya-space-2); color: var(--amaya-ink-muted); font: 400 15px/22px var(--amaya-font-ui); }
+.amaya-home-stack { display: flex; flex-direction: column; gap: var(--amaya-space-3); }
+.amaya-home-note { margin: 0; color: var(--amaya-ink-muted); font: 400 12px/16px var(--amaya-font-ui); }
+.amaya-home-desc { margin: 0; color: var(--amaya-ink-muted); font: 400 13px/18px var(--amaya-font-ui); }
+.amaya-home-sub { display: flex; flex-direction: column; gap: var(--amaya-space-2); padding-top: var(--amaya-space-4); border-top: 1px solid var(--amaya-border-subtle); }
+.amaya-home-subtitle { margin: 0; font: 600 15px/22px var(--amaya-font-ui); }
+
+/* Choice cards (radio) */
+.amaya-home-options { display: flex; flex-direction: column; gap: var(--amaya-space-2); }
+.amaya-home-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--amaya-space-2); }
+.amaya-home-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.amaya-home-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--amaya-space-3);
+  min-height: 44px;
+  padding: var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-surface-page);
+  cursor: pointer;
+}
+.amaya-home-option:hover { border-color: var(--amaya-border-strong); }
+.amaya-home-option:has(input:checked) {
+  border-color: var(--amaya-brand);
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-home-option:has(input:focus-visible) {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+.amaya-home-radio {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  accent-color: var(--amaya-brand);
+}
+.amaya-home-option .amaya-home-radio:focus-visible,
+.amaya-home-seg .amaya-home-radio:focus-visible { outline: none; }
+.amaya-home-option-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.amaya-home-option-title { font: 600 14px/20px var(--amaya-font-ui); }
+.amaya-home-option-desc { color: var(--amaya-ink-muted); font: 400 12.5px/18px var(--amaya-font-ui); }
+.amaya-home-option:has(input:checked) .amaya-home-option-desc,
+.amaya-home-option:has(input:checked) .amaya-home-option-host { color: var(--amaya-on-brand-soft); }
+.amaya-home-option-host { color: var(--amaya-ink-muted); font: 400 11.5px/14px var(--amaya-font-mono); }
+
+/* Segmented control (radio) */
+.amaya-home-segment {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+  padding: 2px;
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-sunken);
+}
+.amaya-home-seg { position: relative; display: inline-flex; cursor: pointer; }
+.amaya-home-seg .amaya-home-radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.amaya-home-seg span {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--amaya-space-3);
+  border-radius: 4px;
+  color: var(--amaya-ink-muted);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+.amaya-home-seg:has(input:checked) span {
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  box-shadow: var(--amaya-shadow-tab);
+}
+.amaya-home-seg:has(input:focus-visible) span {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Layout pictures: flat tiles in the palette */
+.amaya-home-layout-pic {
+  position: relative;
+  display: block;
+  height: 72px;
+  margin-top: var(--amaya-space-2);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-window);
+  border: 1px solid var(--amaya-border-subtle);
+}
+.amaya-home-layout-bar, .amaya-home-layout-page { position: absolute; display: block; border-radius: 4px; }
+.amaya-home-layout-page { background: var(--amaya-surface-raised); border: 1px solid var(--amaya-border-subtle); }
+.amaya-home-layout-pic--sidebar .amaya-home-layout-bar { left: 6px; top: 8px; width: 28%; height: 8px; background: var(--amaya-surface-sunken); }
+.amaya-home-layout-pic--sidebar .amaya-home-layout-page { left: calc(28% + 14px); right: 6px; top: 6px; bottom: 6px; }
+.amaya-home-layout-pic--toolbar .amaya-home-layout-bar { left: calc(28% + 14px); right: 6px; top: 6px; height: 8px; background: var(--amaya-surface-sunken); }
+.amaya-home-layout-pic--toolbar .amaya-home-layout-page { left: calc(28% + 14px); right: 6px; top: 20px; bottom: 6px; }
+
+/* Rows with a switch (settings) */
+.amaya-home-row { display: flex; align-items: center; justify-content: space-between; gap: var(--amaya-space-4); }
+
+/* Footer and buttons */
+.amaya-home-footer { display: flex; align-items: center; gap: var(--amaya-space-2); }
+.amaya-home-spacer { flex: 1; }
+.amaya-home-scrim .amaya-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  height: 32px;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  font: 500 12px/16px var(--amaya-font-ui);
+  cursor: pointer;
+  appearance: none;
+}
+.amaya-home-scrim .amaya-btn:hover { background: var(--amaya-surface-sunken); }
+.amaya-home-scrim .amaya-btn--primary { background: var(--amaya-brand); border-color: var(--amaya-brand); color: var(--amaya-on-brand); }
+.amaya-home-scrim .amaya-btn--primary:hover { background: var(--amaya-brand-hover); border-color: var(--amaya-brand-hover); }
+.amaya-home-scrim .amaya-btn--quiet { background: transparent; border-color: transparent; color: var(--amaya-brand); }
+.amaya-home-scrim .amaya-btn--quiet:hover { background: var(--amaya-brand-soft); color: var(--amaya-on-brand-soft); }
+
+.amaya-home-scrim .amaya-toggle {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-surface-sunken);
+  border: 1px solid var(--amaya-border-strong);
+  cursor: pointer;
+  appearance: none;
+}
+.amaya-home-scrim .amaya-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amaya-border-strong);
+}
+.amaya-home-scrim .amaya-toggle[aria-checked="true"] { background: var(--amaya-brand); border-color: var(--amaya-brand); }
+.amaya-home-scrim .amaya-toggle[aria-checked="true"]::after { transform: translateX(16px); background: var(--amaya-on-brand); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .amaya-home-option, .amaya-home-scrim .amaya-btn, .amaya-home-seg span { transition: background-color 120ms cubic-bezier(0.23, 1, 0.32, 1), border-color 120ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .amaya-home-scrim .amaya-toggle::after { transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1); }
+}
+
+@media (max-width: 640px) {
+  .amaya-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .amaya-home-card { padding: var(--amaya-space-5); }
+}
