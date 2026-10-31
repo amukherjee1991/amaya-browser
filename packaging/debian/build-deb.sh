@@ -114,9 +114,18 @@ chmod -R u+rwX,go+rX,go-w "$ROOT$LIBDIR"
 find "$ROOT$LIBDIR" -type f -name '*.so' -exec chmod 0644 {} +
 
 # Launcher: a tiny wrapper (not a symlink) so the app always runs from its
-# real directory regardless of how /usr/bin/amaya is invoked.
+# real directory regardless of how /usr/bin/amaya is invoked. It answers
+# --version itself: the engine only knows the Gecko version (159.0), while the
+# Amaya release (159.0-3) lives in amaya-ui/version.json.
 cat >"$ROOT/usr/bin/amaya" <<EOF
 #!/bin/sh
+case "\$1" in
+  -v|--version|-version)
+    gecko=\$(sed -n 's/^Version=//p' $LIBDIR/application.ini 2>/dev/null | head -n 1)
+    amaya=\$(sed -n 's/.*"version": *"\\([^"]*\\)".*/\\1/p' $LIBDIR/amaya-ui/version.json 2>/dev/null)
+    echo "Amaya \${amaya:-\$gecko} (Gecko \$gecko)"
+    exit 0 ;;
+esac
 exec $LIBDIR/amaya "\$@"
 EOF
 chmod 0755 "$ROOT/usr/bin/amaya"
