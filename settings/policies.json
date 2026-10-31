@@ -1,0 +1,93 @@
+{
+  "policies": {
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisableRemoteImprovements": true,
+    "DisablePocket": true,
+    "DisableAccounts": true,
+    "DisableSystemAddonUpdate": true,
+    "DontCheckDefaultBrowser": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "SkipTermsOfUse": true,
+    "IPProtectionAvailable": false,
+    "FirefoxHome": {
+      "Search": true,
+      "TopSites": true,
+      "SponsoredTopSites": false,
+      "Highlights": false,
+      "Pocket": false,
+      "Stories": false,
+      "SponsoredPocket": false,
+      "SponsoredStories": false,
+      "Snippets": false,
+      "Weather": false,
+      "Locked": false
+    },
+    "FirefoxSuggest": {
+      "WebSuggestions": false,
+      "SponsoredSuggestions": false,
+      "ImproveSuggest": false,
+      "OnlineEnabled": false,
+      "Locked": false
+    },
+    "UserMessaging": {
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true,
+      "MoreFromMozilla": false,
+      "FirefoxLabs": false,
+      "Locked": false
+    },
+    "GenerativeAI": {
+      "Enabled": false,
+      "Chatbot": false,
+      "SmartWindow": false,
+      "LinkPreviews": false,
+      "TabGroups": false,
+      "Locked": false
+    },
+    "AIControls": {
+      "Default": {
+        "Value": "blocked",
+        "Locked": false
+      },
+      "Translations": {
+        "Value": "available",
+        "Locked": false
+      }
+    },
+    "HttpsOnlyMode": "enabled",
+    "SearchEngines": {
+      "Add": [
+        {
+          "Name": "DuckDuckGo (Amaya)",
+          "Alias": "@ddg",
+          "Description": "DuckDuckGo without a partner code",
+          "Method": "GET",
+          "URLTemplate": "https://duckduckgo.com/?q={searchTerms}",
+          "SuggestURLTemplate": "https://ac.duckduckgo.com/ac/?q={searchTerms}&type=list",
+          "IconURL": "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgMTYgMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZmlsbD0iI2RlNTgzMyIgZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNOCAxNkE4IDggMCAxIDAgOCAwYTggOCAwIDAgMCAwIDE2IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz4KICA8cGF0aCBmaWxsPSIjZGRkIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik05LjEyNSAxMy45NjljMC0uMDYzLjAxNS0uMDc3LS4xODMtLjQ3My0uNTI4LTEuMDU3LTEuMDYtMi41NDgtLjgxOC0zLjUxLjA0NC0uMTc0LS40OTctNi40NjctLjg4LTYuNjctLjQyNS0uMjI3LS45NDgtLjU4Ni0xLjQyNy0uNjY2YTMgMyAwIDAgMC0uODEuMDEzYy0uMDQ1LjAwNi0uMDQ2LjA4NS0uMDA0LjEuMTYzLjA1NS4zNjIuMTUxLjQ3OS4yOTcuMDIyLjAyNy0uMDA4LjA3LS4wNDMuMDcyLS4xMS4wMDQtLjMxLjA1LS41NzQuMjc0LS4wMy4wMjYtLjAwNS4wNzQuMDM0LjA2Ni41NjctLjExMiAxLjE0Ni0uMDU3IDEuNDg3LjI1NC4wMjMuMDIuMDEuMDU2LS4wMTguMDY0LTIuOTYyLjgwNS0yLjM3NSAzLjM4MS0xLjU4NyA2LjU0My43MDIgMi44MTYuOTY3IDMuNzI0IDEuMDUgNGEuMDkuMDkgMCAwIDAgLjA1My4wNTljMS4wMi40MDYgMy4yNC40MjQgMy4yNC0uMjY3eiIgY2xpcC1ydWxlPSJldmVub2RkIi8+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkuNTMxIDE0LjU2M2MtLjM2LjE0LTEuMDYyLjIwMy0xLjQ2OS4yMDMtLjU5NSAwLTEuNDUzLS4wOTQtMS43NjUtLjIzNUE3MCA3MCAwIDAgMSA0LjkgOS41M3YtLjAwMmMtLjY3OS0yLjc3LTEuMjMyLTUuMDMyIDEuODAzLTUuNzQyLjAyOC0uMDA3LjA0MS0uMDQuMDIzLS4wNjItLjM0OC0uNDEzLTEtLjU0OC0xLjgyNi0uMjY0LS4wMzQuMDEyLS4wNjMtLjAyMi0uMDQyLS4wNTEuMTYyLS4yMjMuNDc4LS4zOTUuNjM0LS40Ny4wMzItLjAxNS4wMy0uMDYzLS4wMDQtLjA3M2EzLjUgMy41IDAgMCAwLS40NzEtLjExM2MtLjA0Ni0uMDA3LS4wNS0uMDg2LS4wMDQtLjA5MyAxLjE3LS4xNTcgMi4zOS4xOTQgMy4wMDMuOTY2YS4wNC4wNCAwIDAgMCAuMDIzLjAxNGMyLjI0NS40ODIgMi40MDUgNC4wMyAyLjE0NyA0LjE5MS0uMDUxLjAzMi0uMjE1LjAxNC0uNDMtLjAxLS44NzMtLjA5OC0yLjYwMi0uMjkxLTEuMTc1IDIuMzY4LjAxNC4wMjctLjAwNS4wNjEtLjAzNC4wNjYtLjgwNS4xMjUuMjI2IDIuNjQ2Ljk4NCA0LjMwNyIvPgogIDxwYXRoIGZpbGw9IiNmZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTggMTRBNiA2IDAgMSAwIDggMmE2IDYgMCAwIDAgMCAxMm0wIDFBNyA3IDAgMSAwIDggMWE3IDcgMCAwIDAgMCAxNCIgY2xpcC1ydWxlPSJldmVub2RkIi8+CiAgPHBhdGggZmlsbD0iIzNjYTgyYiIgZD0iTTEwLjUzNSAxMS4zMzdjLS4xNy0uMDgtLjgyOC4zOTItMS4yNjQuNzU0LS4wOS0uMTMtLjI2My0uMjIzLS42NS0uMTU2LS4zNC4wNi0uNTI2LjE0MS0uNjEuMjgyLS41MzUtLjIwMy0xLjQzNi0uNTE2LTEuNjU0LS4yMTQtLjIzNy4zMzEuMDYgMS44OTUuMzc2IDIuMDk4LjE2NS4xMDYuOTU0LS40IDEuMzY1LS43NS4wNjcuMDkzLjE3NC4xNDcuMzk0LjE0Mi4zMzMtLjAwOC44NzItLjA4NS45NTYtLjI0cS4wMDgtLjAxNC4wMTMtLjAzM2MuNDI0LjE1OCAxLjE2OS4zMjUgMS4zMzUuMy40MzQtLjA2NS0uMDYtMi4wOS0uMjYtMi4xODMiLz4KICA8cGF0aCBmaWxsPSIjNGNiYTNjIiBkPSJNOS4zMTEgMTIuMTM3YTEgMSAwIDAgMSAuMDQ1LjFjLjA2LjE2OS4xNTkuNzA2LjA4NC44MzgtLjA3NC4xMzMtLjU1Ny4xOTctLjg1NS4yMDJzLS4zNjUtLjEwMy0uNDI2LS4yNzJjLS4wNDgtLjEzNS0uMDcyLS40NTMtLjA3MS0uNjM1LS4wMTItLjI3LjA4Ni0uMzY0LjU0Mi0uNDM4LjMzNy0uMDU0LjUxNS4wMDkuNjE4LjExOC40NzgtLjM1OCAxLjI3Ny0uODYyIDEuMzU0LS43Ny4zODkuNDYuNDM4IDEuNTUzLjM1NCAxLjk5My0uMDI4LjE0NC0xLjMxMy0uMTQzLTEuMzEzLS4yOTcgMC0uNjQ1LS4xNjctLjgyMS0uMzMyLS44NG0tMi44MTYtLjJjLjEwNS0uMTY3Ljk2LjA0IDEuNDI4LjI0OSAwIDAtLjA5Ni40MzYuMDU3Ljk1LjA0NS4xNS0xLjA3OC44Mi0xLjIyNS43MDUtLjE3LS4xMzMtLjQ4MS0xLjU1NC0uMjYtMS45MDQiLz4KICA8cGF0aCBmaWxsPSIjZmMzIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik02LjkwOSA4LjU1Yy4wNjktLjMuMzktLjg2NiAxLjU0LS44NTIuNTgtLjAwMyAxLjMwMiAwIDEuNzgtLjA1NWE2LjQgNi40IDAgMCAwIDEuNTkyLS4zODdjLjQ5Ny0uMTkuNjc0LS4xNDcuNzM2LS4wMzQuMDY4LjEyNS0uMDEzLjM0LS4xODYuNTM5LS4zMzIuMzc5LS45My42NzItMS45ODQuNzZzLTEuNzUyLS4xOTYtMi4wNTMuMjY0Yy0uMTMuMTk5LS4wMy42NjcuOTkuODE0IDEuMzc4LjIgMi41MS0uMjQgMi42NS4wMjUuMTM5LjI2NS0uNjY2LjgwNC0yLjA0Ni44MTVTNy42ODYgOS45NTYgNy4zOCA5LjcxYy0uMzg4LS4zMTEtLjU2Mi0uNzY2LS40NzItMS4xNiIgY2xpcC1ydWxlPSJldmVub2RkIi8+CiAgPGcgZmlsbD0iIzE0MzA3ZSIgb3BhY2l0eT0iLjgiPgogICAgPHBhdGggZD0iTTguNjY2IDUuMjY2Yy4wNzctLjEyNi4yNDctLjIyNC41MjctLjIyNC4yNzkgMCAuNDEuMTEyLjUwMS4yMzYuMDE5LjAyNS0uMDEuMDU0LS4wMzguMDQybC0uMDItLjAxYy0uMTAzLS4wNDQtLjIyOC0uMDk4LS40NDMtLjEwMmEuOS45IDAgMCAwLS40NjYuMTA0Yy0uMDMxLjAxNy0uMDgtLjAxNi0uMDYxLS4wNDZtLTMuMTQ1LjE2MWExIDEgMCAwIDEgLjYzNS0uMDYzYy4wMzIuMDA3LjA1NC0uMDI3LjAyOS0uMDQ3LS4xMTctLjA5NC0uMzc5LS4yMTItLjcyLS4wODQtLjMwNS4xMTMtLjQ0OS4zNS0uNDUuNTA0IDAgLjAzNy4wNzYuMDQuMDk1LjAxLjA1My0uMDg1LjE0LS4yMDcuNDExLS4zMiIvPgogICAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNOS40MyA2Ljk5YS40MzQuNDM0IDAgMSAxLS4wMDEtLjg2Ny40MzQuNDM0IDAgMCAxIDAgLjg2N20uMzA2LS41NzZhLjExMi4xMTIgMCAwIDAtLjIyNSAwIC4xMTIuMTEyIDAgMCAwIC4yMjUgMG0tMy4xODIuNDQzYS41MDUuNTA1IDAgMSAxLTEuMDEtLjAwMi41MDUuNTA1IDAgMCAxIDEuMDEuMDAybS0uMTUtLjE2OGEuMTMuMTMgMCAxIDAtLjI2MS4wMDEuMTMuMTMgMCAwIDAgLjI2MiAwIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz4KICA8L2c+Cjwvc3ZnPgo="
+        }
+      ],
+      "Default": "DuckDuckGo (Amaya)",
+      "DefaultPrivate": "DuckDuckGo (Amaya)",
+      "Remove": [
+        "Google",
+        "Bing",
+        "DuckDuckGo",
+        "eBay",
+        "Perplexity"
+      ],
+      "PreventInstalls": false
+    },
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "private_browsing": true,
+        "default_area": "navbar"
+      }
+    },
+    "ExtensionUpdate": true
+  }
+}

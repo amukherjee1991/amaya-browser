@@ -1,0 +1,33 @@
+# configs/mozconfig.privacy -- appended to the build mozconfig by tools/amaya.
+# Owner: privacy.  Every option below was checked against Firefox 159's
+# moz.configure files (paths in the comments).
+#
+# Already handled elsewhere, deliberately NOT repeated here:
+#   --disable-crashreporter      configs/mozconfig.common (tooling)
+#   DISABLE_TELEMETRY=1          set by tools/amaya for mach itself (build telemetry)
+#   MOZ_APP_VENDOR               cannot be set here (configure fails);
+#                                patches/0001-branding-app-vendor.patch
+#   MOZ_SERVICES_HEALTHREPORT, MOZ_NORMANDY
+#                                project_flag()s, only settable by imply_option;
+#                                patches/0101-privacy-no-healthreport-normandy.patch
+
+# Telemetry upload code paths (toolkit/moz.configure: option(env="MOZ_TELEMETRY_REPORTING")).
+# Defaults to on for MOZILLA_OFFICIAL builds; an empty value disables it.
+# With the two patches above and the crash reporter off, MOZ_DATA_REPORTING
+# (toolkit/moz.configure, data_reporting) ends up undefined as well.
+export MOZ_TELEMETRY_REPORTING=
+mk_add_options MOZ_TELEMETRY_REPORTING=
+
+# Linux: application updates come from the apt repository, so the updater
+# is not built (build/moz.configure/update-programs.configure: --enable-updater).
+# macOS (Phase M) keeps Mozilla's updater pointed at an Amaya manifest.
+if [ "$(uname -s)" = "Linux" ]; then
+  ac_add_options --disable-updater
+fi
+
+# Safe Browsing (phishing/malware list updates) needs a Google Safe Browsing
+# API key at build time (toolkit/moz.configure: simple_keyfile("Google
+# Safebrowsing API") -> --with-google-safebrowsing-api-keyfile). Without it
+# the list updates fail. Supply the key file on release builders:
+#   ac_add_options --with-google-safebrowsing-api-keyfile=/path/to/sb-key
+# (see docs/network-calls.md, "Open questions").
