@@ -143,6 +143,7 @@ Translations remain available (local, on demand).
 | `browser.contentblocking.category` | `strict`, written once as a user value (marker `amaya.migration.etpStrict`) | Firefox only honours the category if it is a user value; a default would be overwritten with "standard". Afterwards the user's choice is kept. Strict = TCP, social/crypto/fingerprinter blocking, level-2 lists, query stripping, referrer restrictions, FPP, bounce tracking protection, local-network-access prompts. |
 | `network.cookie.cookieBehavior` (+ `.pbmode`) | 5 | Total Cookie Protection. |
 | `privacy.query_stripping.enabled` (+ `.pbmode`), `privacy.query_stripping.strip_on_share.enabled` | true | Strip known tracking parameters, also on "Copy clean link". |
+| `privacy.query_stripping.strip_list` | 207 parameters | Local list so stripping works from the first click (Firefox's own list only arrives later via Remote Settings): Mozilla's strip-on-share global list minus the generic `var`/`adid`, plus `igshid`, `ysclid`, Olytics, Marketo and others. Covers the whole `utm_*` family. |
 | `privacy.bounceTrackingProtection.mode` | 1 | Purge bounce trackers. |
 | `network.http.referer.XOriginTrimmingPolicy` | 2 | Cross-origin referrer = origin only. |
 | `privacy.globalprivacycontrol.enabled` | true | Send GPC (legally meaningful in several jurisdictions). |
