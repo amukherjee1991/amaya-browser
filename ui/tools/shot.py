@@ -118,6 +118,9 @@ def main(argv=None) -> int:
     ap.add_argument("--dark", action="store_true", help="force the dark system theme")
     ap.add_argument("--timeout", type=float, default=60, help="startup timeout (s)")
     ap.add_argument("--ui-dir", default=str(devapp.UI_DIR), help="AMAYA_UI_DIR (default: ./ui)")
+    ap.add_argument("--as-staged", action="store_true",
+                    help="run $AMAYA_APP as is (no cached copy, no AMAYA_UI_DIR): "
+                         "tests what `tools/amaya stage` installed into it")
     ap.add_argument("--keep-profile", action="store_true")
     ap.add_argument("--verbose", action="store_true", help="print the whole browser log")
     args = ap.parse_args(argv)
@@ -126,13 +129,15 @@ def main(argv=None) -> int:
     width, height = int(w), int(hgt)
     js = chrome_js_arg(args.js)
 
-    app = devapp.prepare_app()
+    app = devapp.source_app() if args.as_staged else devapp.prepare_app()
     port = free_port()
     profile = devapp.make_profile({"marionette.port": port}, dark=args.dark)
     logpath = profile.parent / f"{profile.name}.log"
     env = dict(os.environ)
+    env.pop("AMAYA_UI_DIR", None)
+    if not args.as_staged:
+        env["AMAYA_UI_DIR"] = str(Path(args.ui_dir).resolve())
     env.update({
-        "AMAYA_UI_DIR": str(Path(args.ui_dir).resolve()),
         "MOZ_HEADLESS": "1",
         "MOZ_HEADLESS_WIDTH": str(width),
         "MOZ_HEADLESS_HEIGHT": str(height),
