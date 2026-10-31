@@ -67,6 +67,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The switcher already shows the current space, so Firefox's container label
+   ("Work") in the address field would only crowd the sidebar. */
+#amaya-urlbar-slot #userContext-icons {
+  display: none;
+}
+/* Compact shell, sidebar collapsed to 52px: only the current space, as a dot.
+   The full row comes back when the sidebar slides out. */
+:root[amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-spaces {
+  padding-inline: 0;
+}
+:root[amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-spaces > :not(.amaya-space.is-active),
+:root[amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-spaces .amaya-space__name {
+  display: none;
+}
+:root[amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-spaces .amaya-space.is-active {
+  justify-content: center;
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+}
 #amaya-spaces .amaya-spaces__count {
   font: 500 11.5px/14px var(--amaya-font-ui);
 }
