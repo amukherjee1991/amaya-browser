@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glance preview, light</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="amaya-theme.css">
+<link rel="stylesheet" href="ds/amayabrowser/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="amaya-root" data-theme="light" style="width: 1440px; height: 900px; box-sizing: border-box; display: flex; gap: 8px; padding: 8px; background: var(--surface-window); font-family: var(--font-ui); color: var(--ink);">
+<nav class="amaya-sidebar" aria-label="Sidebar" style="padding: 0; width: 264px; flex: none;">
+<div class="amaya-sidebar__top">
+<div class="win-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+<button class="amaya-iconbtn" aria-label="Collapse sidebar"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M9 5v14"></path></svg></button>
+<span style="flex: 1;"></span>
+<button class="amaya-iconbtn" aria-label="Back"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button class="amaya-iconbtn" aria-label="Forward"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div class="amaya-urlbar">
+<button class="amaya-shieldbtn" aria-label="Privacy: 22 blocked"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg>22</button>
+<span class="amaya-urlbar__text"><span class="amaya-urlbar__host">news.example.org</span>/today</span>
+</div>
+<div class="amaya-pins">
+<button class="amaya-pin" aria-label="Mail"><span class="amaya-tab__fav">M</span></button>
+<button class="amaya-pin" aria-label="Calendar"><span class="amaya-tab__fav">C</span></button>
+<button class="amaya-pin" aria-label="Docs"><span class="amaya-tab__fav">D</span></button>
+</div>
+<div class="amaya-sep"></div>
+<div class="amaya-tab is-active"><span class="amaya-tab__fav">N</span><span class="amaya-tab__title">Today's reading</span></div>
+<div class="amaya-tab"><span class="amaya-tab__fav">H</span><span class="amaya-tab__title">Harbor weather</span></div>
+<button class="amaya-newtab" style="border: 0; background: none; text-align: left;"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New tab</button>
+<div style="flex: 1;"></div>
+<div class="amaya-spaces">
+<button class="amaya-space" style="--c: var(--space-moss);" aria-label="Work"><span class="amaya-space__dot"></span></button>
+<button class="amaya-space is-active" style="--c: var(--space-clay);"><span class="amaya-space__dot"></span>Home</button>
+<button class="amaya-space" style="--c: var(--space-sky);" aria-label="Research"><span class="amaya-space__dot"></span></button>
+<button class="amaya-iconbtn" aria-label="New space"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</nav>
+<main class="webview" style="position: relative;">
+<div class="site"><i style="width: 40%; height: 18px;"></i><i style="width: 90%;"></i><i style="width: 84%;"></i><i style="width: 70%;"></i><i style="width: 88%;"></i><i style="width: 60%;"></i><i style="width: 92%;"></i><i style="width: 76%;"></i></div>
+<div style="position: absolute; inset: 0; background: rgba(10,14,12,0.45);"></div>
+<section class="amaya-glance" aria-label="Glance preview" style="position: absolute; left: 4%; top: 10%; width: 92%; height: 80%;">
+<div class="amaya-glance__bar">
+<svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--ink-muted);"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg>
+<span class="amaya-urlbar__text"><span class="amaya-urlbar__host" style="color: var(--ink);">example.org</span>/linked-article</span>
+<button class="amaya-btn amaya-btn--quiet"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M10 5H5v14h14v-5"></path></svg>Open as tab</button>
+<button class="amaya-btn amaya-btn--quiet"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M12 5v14"></path></svg>Split</button>
+<button class="amaya-iconbtn" aria-label="Close preview"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<div class="site"><i style="width: 55%; height: 22px;"></i><i style="width: 30%;"></i><i style="width: 94%;"></i><i style="width: 88%;"></i><i style="width: 91%;"></i><i style="width: 64%;"></i><i style="width: 86%;"></i></div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -7,12 +7,17 @@ Contract with settings/ (owned by the privacy work):
   settings/extensions.json  -> [{"id", "url", "sha256"}, ...], each downloaded
                                (cached in .cache/extensions/, sha256-verified)
                                to <appdir>/distribution/extensions/<id>.xpi
+
+Contract with ui/ (the Phase 2 workflow UI, see ui/README.md):
+  ui/                       -> <appdir>/amaya-ui/  (replaced wholesale), minus
+                               ui/design/, ui/tools/ and *.md files
 """
 
 from __future__ import annotations
 
 import json
 import re
+import shutil
 from pathlib import Path
 
 from .context import Context
@@ -23,6 +28,11 @@ SETTINGS_FILES = (
     ("autoconfig.js", Path("defaults/pref/autoconfig.js")),
     ("policies.json", Path("distribution/policies.json")),
 )
+
+# Not shipped: design references, developer tools, docs.
+UI_EXCLUDE_DIRS = ("design", "tools")
+UI_EXCLUDE_PATTERNS = ("*.md", "__pycache__", "*.pyc", ".*")
+UI_DEST = Path("amaya-ui")
 
 # Extension IDs are either an email-like id or a {GUID}; never a path.
 EXT_ID_RE = re.compile(r"^(\{[0-9A-Fa-f-]{36}\}|[A-Za-z0-9._+-]+@[A-Za-z0-9._-]+)$")
@@ -62,6 +72,29 @@ def fetch_extension(ctx: Context, ext: dict) -> Path:
     return cached
 
 
+def stage_ui(ui_dir: Path, appdir: Path) -> bool:
+    """Copy the workflow UI into <appdir>/amaya-ui/, replacing any old copy."""
+    dest = appdir / UI_DEST
+    if dest.is_symlink() or dest.is_file():
+        dest.unlink()
+    elif dest.exists():
+        shutil.rmtree(dest)
+    if not (ui_dir / "loader.js").is_file():
+        warn("ui/loader.js not found; workflow UI not staged")
+        return False
+    ignore_names = shutil.ignore_patterns(*UI_EXCLUDE_PATTERNS)
+
+    def ignore(src, names):
+        skipped = set(ignore_names(src, names))
+        if Path(src) == ui_dir:
+            skipped.update(n for n in names if n in UI_EXCLUDE_DIRS)
+        return skipped
+
+    shutil.copytree(ui_dir, dest, ignore=ignore)
+    info(f"staged ui/ -> {UI_DEST}/")
+    return True
+
+
 def stage(ctx: Context, appdir: Path) -> None:
     appdir = Path(appdir)
     if not appdir.is_dir():
@@ -74,6 +107,8 @@ def stage(ctx: Context, appdir: Path) -> None:
             info(f"staged settings/{name} -> {rel}")
         else:
             warn(f"settings/{name} not found; skipping")
+
+    stage_ui(ctx.repo / "ui", appdir)
 
     manifest = sdir / "extensions.json"
     if not manifest.is_file():

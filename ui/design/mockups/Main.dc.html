@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Amaya window, light</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="amaya-theme.css">
+<link rel="stylesheet" href="ds/amayabrowser/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0e6556}a:hover{color:#0a5246}
+</style>
+</helmet>
+<div class="amaya-root" data-theme="light" style="width: 1440px; height: 900px; box-sizing: border-box; display: flex; gap: 8px; padding: 8px; background: var(--surface-window); font-family: var(--font-ui); color: var(--ink);">
+<nav class="amaya-sidebar" aria-label="Sidebar" style="padding: 0; width: 264px; flex: none;">
+<div class="amaya-sidebar__top">
+<div class="win-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+<button class="amaya-iconbtn" aria-label="Collapse sidebar"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M9 5v14"></path></svg></button>
+<span style="flex: 1;"></span>
+<button class="amaya-iconbtn" aria-label="Back"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button class="amaya-iconbtn" aria-label="Forward"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div class="amaya-urlbar">
+<button class="amaya-shieldbtn" aria-label="Privacy: 14 blocked"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg>14</button>
+<span class="amaya-urlbar__text" style="color: var(--ink-subtle);">Search or enter address</span>
+</div>
+<div class="amaya-pins">
+<button class="amaya-pin" aria-label="Mail"><span class="amaya-tab__fav">M</span></button>
+<button class="amaya-pin" aria-label="Calendar"><span class="amaya-tab__fav">C</span></button>
+<button class="amaya-pin" aria-label="Docs"><span class="amaya-tab__fav">D</span></button>
+</div>
+<div class="amaya-sep"></div>
+<div class="amaya-folder"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg><span style="flex: 1;">Reading list</span></div>
+<div class="amaya-folder__kids">
+<div class="amaya-tab"><span class="amaya-tab__fav">F</span><span class="amaya-tab__title">Field guide</span></div>
+<div class="amaya-tab is-suspended"><span class="amaya-tab__fav">A</span><span class="amaya-tab__title">Archive notes</span></div>
+</div>
+<div class="amaya-tab"><span class="amaya-tab__fav">H</span><span class="amaya-tab__title">Harbor weather</span><button class="amaya-tab__x" aria-label="Close tab"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="amaya-tab is-active"><span class="amaya-tab__fav">N</span><span class="amaya-tab__title">New tab</span><button class="amaya-tab__x" aria-label="Close tab"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="amaya-tab is-loading"><span class="amaya-tab__fav"></span><span class="amaya-tab__title">Loading page</span></div>
+<button class="amaya-newtab" style="border: 0; background: none; text-align: left;"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New tab</button>
+<div style="flex: 1;"></div>
+<div class="amaya-spaces">
+<button class="amaya-space is-active" style="--c: var(--space-moss);"><span class="amaya-space__dot"></span>Work</button>
+<button class="amaya-space" style="--c: var(--space-clay);" aria-label="Home"><span class="amaya-space__dot"></span></button>
+<button class="amaya-space" style="--c: var(--space-sky);" aria-label="Research"><span class="amaya-space__dot"></span></button>
+<button class="amaya-iconbtn" aria-label="New space"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</nav>
+<main class="webview" style="align-items: center; justify-content: center; gap: 32px;">
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 48px; line-height: 52px; font-weight: 500; color: var(--ink);">Good evening</h1>
+<label style="display: flex; align-items: center; gap: 12px; width: 560px; height: 52px; box-sizing: border-box; padding: 0 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink-subtle); font-size: 15px;">
+<svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg>
+<span style="flex: 1;">Search with DuckDuckGo or enter address</span>
+<span class="amaya-kbd">Ctrl K</span>
+</label>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; width: 560px;">
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); text-decoration: none; font-size: 12px;"><span class="amaya-tab__fav" style="width: 32px; height: 32px; font-size: 14px;">W</span>Wiki</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); text-decoration: none; font-size: 12px;"><span class="amaya-tab__fav" style="width: 32px; height: 32px; font-size: 14px;">M</span>Maps</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); text-decoration: none; font-size: 12px;"><span class="amaya-tab__fav" style="width: 32px; height: 32px; font-size: 14px;">N</span>News</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); text-decoration: none; font-size: 12px;"><span class="amaya-tab__fav" style="width: 32px; height: 32px; font-size: 14px;">+</span>Add site</a>
+</div>
+<p style="margin: 0; display: flex; align-items: center; gap: 6px; color: var(--ink-muted); font-size: 12px;"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--brand);"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg>[N] trackers blocked this week · <a href="#">See privacy report</a></p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

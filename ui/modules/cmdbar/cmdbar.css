@@ -1,0 +1,210 @@
+/* Amaya command bar. Every value comes from tokens.css (--amaya-*).
+ * No open/close or hover animation: this is keyboard-triggered UI. */
+
+/* Fallback host when the loader's overlay root is missing. */
+.amaya-cmdbar-host {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+.amaya-cmdbar-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: auto;
+  /* Lightly dimmed page (lighter than Glance's 45% scrim). */
+  background: rgba(10, 14, 12, 0.16);
+}
+.amaya-cmdbar-backdrop[hidden] {
+  display: none;
+}
+
+.amaya-cmdbar {
+  position: absolute;
+  top: 14vh;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  width: 560px;
+  max-width: calc(100% - 2 * var(--amaya-space-4));
+  max-height: 72vh;
+  overflow: hidden;
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-lg);
+  background: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-popover);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+  box-sizing: border-box;
+  -moz-user-focus: normal;
+}
+.amaya-cmdbar *,
+.amaya-cmdbar *::before,
+.amaya-cmdbar *::after {
+  box-sizing: border-box;
+}
+
+.amaya-cmdbar .amaya-ico {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+/* Input row: 52px */
+.amaya-cmdbar .amaya-cmd__input {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--amaya-space-3);
+  height: 52px;
+  padding: 0 var(--amaya-space-4);
+  border-bottom: 1px solid var(--amaya-border-subtle);
+  color: var(--amaya-ink-muted);
+  font: 400 15px/22px var(--amaya-font-ui);
+}
+.amaya-cmdbar__field {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--amaya-ink);
+  font: inherit;
+  appearance: none;
+}
+.amaya-cmdbar__field::placeholder {
+  color: var(--amaya-ink-subtle);
+  opacity: 1;
+}
+/* The input row shows the focus state (the field itself has no ring). */
+.amaya-cmdbar .amaya-cmd__input:focus-within {
+  box-shadow: inset 0 -2px 0 var(--amaya-focus-ring);
+}
+
+/* Results */
+.amaya-cmdbar__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--amaya-space-1);
+}
+.amaya-cmdbar__list:empty {
+  display: none;
+}
+.amaya-cmdbar .amaya-cmd__group {
+  padding: var(--amaya-space-2) var(--amaya-space-2) 0;
+}
+.amaya-cmdbar .amaya-cmd__group:last-child {
+  padding-bottom: var(--amaya-space-1);
+}
+.amaya-cmdbar .amaya-cmd__label {
+  padding: var(--amaya-space-1) var(--amaya-space-3);
+  color: var(--amaya-ink-subtle);
+  font: 500 11.5px/14px var(--amaya-font-ui);
+}
+.amaya-cmdbar .amaya-cmd__item {
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-3);
+  height: 36px;
+  padding: 0 var(--amaya-space-3);
+  border-radius: var(--amaya-radius-md);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+  cursor: default;
+}
+.amaya-cmdbar .amaya-cmd__item > .amaya-ico {
+  color: var(--amaya-ink-muted);
+}
+.amaya-cmdbar .amaya-cmd__item.is-selected {
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-cmdbar .amaya-cmd__item.is-selected > .amaya-ico {
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-cmdbar__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.amaya-cmdbar .amaya-cmd__hint {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  max-width: 45%;
+  margin-left: auto;
+  color: var(--amaya-ink-muted);
+  font: 400 11.5px/14px var(--amaya-font-ui);
+}
+.amaya-cmdbar__hinttext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.amaya-cmdbar .amaya-cmd__item.is-selected .amaya-cmd__hint {
+  color: var(--amaya-on-brand-soft);
+}
+
+/* Shortcut keys */
+.amaya-cmdbar .amaya-kbd {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: 4px;
+  color: var(--amaya-ink-muted);
+  font: 500 11.5px/14px var(--amaya-font-mono);
+}
+.amaya-cmdbar .amaya-cmd__item.is-selected .amaya-kbd {
+  border-color: currentColor;
+  color: inherit;
+}
+
+/* Favicon, with a first-letter square when there is none */
+.amaya-cmdbar__fav {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink-muted);
+  font: 600 10px/1 var(--amaya-font-ui);
+}
+.amaya-cmdbar__fav.has-img {
+  background: none;
+  color: transparent;
+}
+.amaya-cmdbar__favimg {
+  position: absolute;
+  inset: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.amaya-cmdbar__empty {
+  padding: var(--amaya-space-4);
+  color: var(--amaya-ink-muted);
+  font: 400 13px/16px var(--amaya-font-ui);
+}

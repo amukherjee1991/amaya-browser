@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compact mode with privacy panel, dark</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="amaya-theme.css">
+<link rel="stylesheet" href="ds/amayabrowser/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="amaya-root" data-theme="dark" style="width: 1440px; height: 900px; box-sizing: border-box; display: flex; gap: 8px; padding: 8px; background: var(--surface-window); font-family: var(--font-ui); color: var(--ink);">
+<nav aria-label="Compact sidebar" style="width: 52px; flex: none; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 0;">
+<button class="amaya-iconbtn" aria-label="Expand sidebar"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M9 5v14"></path></svg></button>
+<div class="amaya-sep" style="width: 28px; margin: 4px 0;"></div>
+<button class="amaya-pin" aria-label="Mail" style="width: 36px; height: 36px; border: 0;"><span class="amaya-tab__fav">M</span></button>
+<button class="amaya-pin" aria-label="Docs" style="width: 36px; height: 36px; border: 0;"><span class="amaya-tab__fav">D</span></button>
+<div class="amaya-sep" style="width: 28px; margin: 4px 0;"></div>
+<button class="amaya-pin is-active" aria-label="Shop, active tab" style="width: 36px; height: 36px; border: 0;"><span class="amaya-tab__fav">S</span></button>
+<button class="amaya-pin" aria-label="Harbor weather" style="width: 36px; height: 36px; border: 0; background: none;"><span class="amaya-tab__fav">H</span></button>
+<button class="amaya-pin" aria-label="Field guide" style="width: 36px; height: 36px; border: 0; background: none;"><span class="amaya-tab__fav">F</span></button>
+<div style="flex: 1;"></div>
+<button class="amaya-space is-active" style="--c: var(--space-moss); padding: 0 9px;" aria-label="Space: Work"><span class="amaya-space__dot"></span></button>
+</nav>
+<main class="webview" style="position: relative;">
+<div class="site"><i style="width: 35%; height: 18px;"></i><i style="width: 86%;"></i><i style="width: 90%;"></i><i style="width: 72%;"></i><i style="width: 80%;"></i><i style="width: 58%;"></i></div>
+<div class="amaya-urlbar" style="position: absolute; left: 50%; top: 16px; transform: translateX(-50%); width: 640px; background: var(--surface-raised); box-shadow: var(--shadow-popover); border: 1px solid var(--border-subtle);">
+<button class="amaya-shieldbtn" aria-label="Privacy: 31 blocked" aria-expanded="true"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg>31</button>
+<span class="amaya-urlbar__text"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg> <span class="amaya-urlbar__host">shop.example.org</span>/cart</span>
+<span class="amaya-kbd">Ctrl L</span>
+</div>
+<section class="amaya-panel" aria-label="Privacy on shop.example.org" style="position: absolute; left: 248px; top: 64px;">
+<div class="amaya-panel__head">
+<span class="amaya-shieldmark"><svg class="amaya-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path></svg></span>
+<div><div class="amaya-title">Protected on shop.example.org</div><div class="amaya-sub">Strict blocking · HTTPS · Work space</div></div>
+</div>
+<div class="amaya-stats">
+<div class="amaya-stat"><b>24</b><span>Trackers blocked</span></div>
+<div class="amaya-stat"><b>5</b><span>Fingerprint attempts</span></div>
+<div class="amaya-stat"><b>2</b><span>Cookies kept apart</span></div>
+</div>
+<div class="amaya-row">
+<div><div class="amaya-label" style="color: var(--ink);">Fingerprint protection</div><div class="amaya-sub">Balanced mixes your values</div></div>
+<div class="amaya-segment" role="group" aria-label="Fingerprint mode"><button class="is-on" aria-pressed="true">Balanced</button><button aria-pressed="false">Uniform</button></div>
+</div>
+<div class="amaya-row">
+<div><div class="amaya-label" style="color: var(--ink);">Block trackers on this site</div><div class="amaya-sub">Turning off may fix a broken page</div></div>
+<button class="amaya-toggle" role="switch" aria-checked="true" aria-label="Block trackers on this site"></button>
+</div>
+<div style="display: flex; gap: 8px;">
+<button class="amaya-btn">See what was blocked</button>
+<button class="amaya-btn amaya-btn--quiet">Report broken site</button>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
