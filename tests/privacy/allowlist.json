@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "comment": "Strict allow-list for the idle-traffic test (Gate 1). Every entry is provisional until reconciled with docs/network-calls.md. Host wildcards: '*.' = exactly one DNS label, '**.' = any depth.",
+  "entries": [
+    {
+      "host": "firefox.settings.services.mozilla.com",
+      "port": 443,
+      "purpose": "Remote Settings: security-critical collections only (add-on blocklist, CRLite / cert revocation, intermediates)",
+      "phase": "first-run",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "firefox-settings-attachments.cdn.mozilla.net",
+      "port": 443,
+      "purpose": "Remote Settings attachments (CRLite filters, intermediate certificates)",
+      "phase": "first-run",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "safebrowsing.googleapis.com",
+      "port": 443,
+      "purpose": "Safe Browsing list updates (hash-prefix lists; no URLs sent)",
+      "phase": "first-run",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "versioncheck.addons.mozilla.org",
+      "port": 443,
+      "purpose": "Add-on update check for the bundled uBlock Origin",
+      "phase": "idle",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "addons.mozilla.org",
+      "port": 443,
+      "purpose": "Download of a newer uBlock Origin XPI when the update check finds one (the XPI itself may come from addons.cdn.mozilla.net)",
+      "phase": "idle",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    }
+  ]
+}
