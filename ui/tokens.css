@@ -66,7 +66,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --amaya-surface-window: #161918;
     --amaya-surface-page: #1d201f;
     --amaya-surface-raised: #272b29;
@@ -96,6 +96,37 @@
     --amaya-shadow-popover: 0 8px 24px rgba(0,0,0,0.55);
     --amaya-shadow-glance: 0 24px 64px rgba(0,0,0,0.7);
   }
+}
+
+:root[data-theme="dark"] {
+  --amaya-surface-window: #161918;
+  --amaya-surface-page: #1d201f;
+  --amaya-surface-raised: #272b29;
+  --amaya-surface-sunken: #0f1110;
+  --amaya-ink: #ebeae5;
+  --amaya-ink-muted: #aab0ab;
+  --amaya-ink-subtle: #98a09a;
+  --amaya-border-subtle: #343937;
+  --amaya-border-strong: #7b827d;
+  --amaya-brand: #58c4ae;
+  --amaya-brand-hover: #7ad3c1;
+  --amaya-on-brand: #06241e;
+  --amaya-brand-soft: #1c3a34;
+  --amaya-on-brand-soft: #a6e3d5;
+  --amaya-warn: #e8b04a;
+  --amaya-warn-soft: #3b2f14;
+  --amaya-danger: #f2877f;
+  --amaya-danger-soft: #3d1f1c;
+  --amaya-focus-ring: #8db8f2;
+  --amaya-space-moss: #6fbf86;
+  --amaya-space-clay: #e08a6f;
+  --amaya-space-sky: #6fa8dc;
+  --amaya-space-sand: #d9a24a;
+  --amaya-space-plum: #c08bc4;
+  --amaya-space-slate: #9aabb8;
+  --amaya-shadow-tab: 0 1px 2px rgba(0,0,0,0.5);
+  --amaya-shadow-popover: 0 8px 24px rgba(0,0,0,0.55);
+  --amaya-shadow-glance: 0 24px 64px rgba(0,0,0,0.7);
 }
 
 @media (prefers-reduced-motion: reduce) {

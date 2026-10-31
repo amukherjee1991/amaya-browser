@@ -49,7 +49,10 @@ def render(tokens: dict) -> str:
         "/* Every design token as --amaya-<name>. Light by default, dark via the\n"
         "   system/browser colour scheme. Durations drop to 0ms under reduced motion. */\n"
         f":root {{\n{block(common)}\n{block(light)}\n}}\n\n"
-        f"@media (prefers-color-scheme: dark) {{\n  :root {{\n{block(dark, '    ')}\n  }}\n}}\n\n"
+        f"@media (prefers-color-scheme: dark) {{\n  :root:not([data-theme=\"light\"]) {{\n{block(dark, '    ')}\n  }}\n}}\n\n"
+        # An explicit theme wins over the media query (pages under Uniform
+        # fingerprinting always see a light colour scheme).
+        f":root[data-theme=\"dark\"] {{\n{block(dark)}\n}}\n\n"
         "@media (prefers-reduced-motion: reduce) {\n  :root {\n"
         "    --amaya-dur-hover: 0ms;\n    --amaya-dur-popover: 0ms;\n    --amaya-dur-sidebar: 0ms;\n"
         "  }\n}\n"
