@@ -81,6 +81,7 @@ def build_report(events, allowlist, meta=None):
         entry = allowlist.match(d["host"], port)
         d["allowed"] = entry is not None
         d["matched_entry"] = entry.describe() if entry else None
+        d["known_bad"] = allowlist.is_known_bad(d["host"])
     dests.sort(key=lambda d: (d["first_seen"]["scenario"] or "", d["first_seen"]["t"],
                               d["host"], d["port"] or 0))
     denied = [d for d in dests if not d["allowed"]]
@@ -89,12 +90,14 @@ def build_report(events, allowlist, meta=None):
         "result": "fail" if denied or anomalies else "pass",
         "meta": meta or {},
         "allowlist": {"path": allowlist.path, "entries": len(allowlist.entries),
+                      "deny": len(allowlist.deny),
                       "warnings": allowlist.warnings()},
         "summary": {
             "destinations": len(dests),
             "allowed": len(dests) - len(denied),
             "denied": len(denied),
             "denied_hosts": sorted({d["host"] for d in denied}),
+            "known_bad_hosts": sorted({d["host"] for d in denied if d["known_bad"]}),
             "all_hosts": sorted({d["host"] for d in dests}),
         },
         "destinations": dests,
@@ -144,7 +147,8 @@ def render_text(report):
             if d["matched_entry"]:
                 rule = "#%d %s" % (d["matched_entry"]["index"], d["matched_entry"]["host"])
             rows.append((when, ",".join(d["observed_via"]), _endpoint(d),
-                         "allow" if d["allowed"] else "DENY", rule))
+                         "allow" if d["allowed"] else "DENY", rule or
+                         ("known phone-home (deny list)" if d.get("known_bad") else "")))
         widths = [max(len(r[i]) for r in rows) for i in range(4)]
         for r in rows:
             out.append("  ".join(r[i].ljust(widths[i]) for i in range(4)) + "  " + r[4])

@@ -23,6 +23,11 @@ Ports
   ``"port": 443`` or ``"ports": [80, 443]``.  Omitting both means "any port"
   and is reported as a warning by ``validate`` -- keep the list strict.
 
+Optional ``"deny": ["host", ...]`` lists known phone-home hosts (from
+docs/network-calls.md).  It does not change the verdict -- anything not
+allowed already fails -- but denied hits are labelled ``known_bad`` in the
+report, and a deny pattern that is also allowed is rejected as a contradiction.
+
 DNS-only observations (a name lookup with no connection attempt yet) are
 matched on the host alone: a lookup is allowed if *some* entry allows that
 host on any port.
@@ -125,6 +130,13 @@ class Allowlist:
             raise AllowlistError("%s: 'entries' must be a list" % path)
         self.path = path
         self.entries = [Entry(e, i) for i, e in enumerate(entries)]
+        deny = data.get("deny", [])
+        if not isinstance(deny, list) or not all(isinstance(h, str) and h for h in deny):
+            raise AllowlistError("%s: 'deny' must be a list of host patterns" % path)
+        self.deny = [Entry({"host": h}, i) for i, h in enumerate(deny)]
+        for d in self.deny:
+            if d.wild is None and self.match(d.pattern, None):
+                raise AllowlistError("%s: %s is both allowed and denied" % (path, d.pattern))
 
     @classmethod
     def load(cls, path):
@@ -141,6 +153,9 @@ class Allowlist:
             if e.matches(host, port):
                 return e
         return None
+
+    def is_known_bad(self, host):
+        return any(d.matches_host(host) for d in self.deny)
 
     def warnings(self):
         out = []

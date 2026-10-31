@@ -64,6 +64,22 @@ class MatchTest(unittest.TestCase):
         self.assertEqual(a.match("b.example.com", 443).index, 1)
 
 
+class DenyTest(unittest.TestCase):
+    def test_known_bad(self):
+        a = Allowlist({"version": 1, "entries": [{"host": "a.example", "port": 443}],
+                       "deny": ["incoming.telemetry.mozilla.org", "*.ads.example"]})
+        self.assertTrue(a.is_known_bad("Incoming.Telemetry.Mozilla.org"))
+        self.assertTrue(a.is_known_bad("x.ads.example"))
+        self.assertFalse(a.is_known_bad("a.example"))
+
+    def test_contradiction_rejected(self):
+        with self.assertRaises(AllowlistError):
+            Allowlist({"version": 1, "entries": [{"host": "a.example", "port": 443}],
+                       "deny": ["a.example"]})
+        with self.assertRaises(AllowlistError):
+            Allowlist({"version": 1, "entries": [], "deny": "a.example"})
+
+
 class ValidationTest(unittest.TestCase):
     def bad(self, data):
         with self.assertRaises(AllowlistError):
@@ -105,6 +121,8 @@ class ValidationTest(unittest.TestCase):
                 self.assertIn(k, e)
         self.assertIsNone(a.match("incoming.telemetry.mozilla.org", 443))
         self.assertIsNone(a.match("push.services.mozilla.com", 443))
+        self.assertTrue(all(e.get("provisional") for e in raw["entries"]))
+        self.assertTrue(a.is_known_bad("incoming.telemetry.mozilla.org"))
 
 
 if __name__ == "__main__":
