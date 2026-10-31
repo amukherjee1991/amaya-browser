@@ -1,0 +1,37 @@
+# Homebrew cask template for Amaya (Phase M).
+# Fill @VERSION@ (e.g. 159.0-1), @SHA256_ARM@, @SHA256_INTEL@, @DOWNLOAD_BASE@
+# (e.g. https://forgejo.example.org/amaya/amaya-browser/releases/download)
+# and @HOMEPAGE@, then commit as Casks/amaya.rb in the tap repository.
+cask "amaya" do
+  arch arm: "arm64", intel: "x86_64"
+
+  version "@VERSION@"
+  sha256 arm:   "@SHA256_ARM@",
+         intel: "@SHA256_INTEL@"
+
+  url "@DOWNLOAD_BASE@/v#{version}/Amaya-#{version}-#{arch}.dmg"
+  name "Amaya"
+  desc "Privacy-first web browser built on the Gecko engine"
+  homepage "@HOMEPAGE@"
+
+  livecheck do
+    url :url
+    strategy :git
+    regex(/^v?(\d+(?:\.\d+)+-\d+)$/i)
+  end
+
+  auto_updates true
+  # Keep in step with the upstream Firefox minimum (check the release notes).
+  depends_on macos: ">= :catalina"
+
+  app "Amaya.app"
+  binary "#{appdir}/Amaya.app/Contents/MacOS/amaya"
+
+  zap trash: [
+    "~/Library/Application Support/Amaya",
+    "~/Library/Caches/Amaya",
+    "~/Library/Caches/org.amaya.Browser",
+    "~/Library/Preferences/org.amaya.Browser.plist",
+    "~/Library/Saved Application State/org.amaya.Browser.savedState",
+  ]
+end

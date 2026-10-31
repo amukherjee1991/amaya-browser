@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template: @VERSION@, @DATE@ and @HOMEPAGE@ are filled in by build-deb.sh -->
+<component type="desktop-application">
+  <id>org.amaya.Browser</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MPL-2.0</project_license>
+  <name>Amaya</name>
+  <summary>Privacy-first web browser built on Gecko</summary>
+  <developer id="org.amaya">
+    <name>Amaya Browser contributors</name>
+  </developer>
+  <description>
+    <p>
+      Amaya is a privacy-first web browser built as a thin, auditable layer on
+      top of the Gecko engine from Mozilla Firefox.
+    </p>
+    <ul>
+      <li>No telemetry, studies or sponsored content</li>
+      <li>Strict tracking protection and Total Cookie Protection by default</li>
+      <li>HTTPS-only mode and a built-in content blocker</li>
+      <li>Selectable fingerprinting-resistance modes</li>
+    </ul>
+  </description>
+  <url type="homepage">@HOMEPAGE@</url>
+  <launchable type="desktop-id">org.amaya.Browser.desktop</launchable>
+  <provides>
+    <binary>amaya</binary>
+  </provides>
+  <categories>
+    <category>Network</category>
+    <category>WebBrowser</category>
+  </categories>
+  <keywords>
+    <keyword>browser</keyword>
+    <keyword>web</keyword>
+    <keyword>privacy</keyword>
+  </keywords>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>
