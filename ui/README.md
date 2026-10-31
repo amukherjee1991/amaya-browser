@@ -66,8 +66,9 @@ Each module lives in `modules/<name>/` and owns only that folder.
 | Id | Where | Used by |
 |---|---|---|
 | `amaya-sidebar` | The left sidebar column (Gecko's vertical-tabs sidebar, restyled) | shell |
-| `amaya-sidebar-top` | Top row: collapse, pinned extensions, Extensions button, back, forward, menu | shell, extensions |
-| `amaya-urlbar-slot` | Where the address field lives in the sidebar | shell (moves `#urlbar` here), privacy (shield) |
+| `amaya-sidebar-top` | Top row: collapse, back, forward, menu | shell |
+| `amaya-urlbar-slot` | Where the address field lives in the sidebar | shell (moves `#urlbar` here), privacy (shield), extensions (adds its row after it) |
+| `amaya-ext-row` | Extension icons + Extensions button, right under the address field (created by **extensions**, not shell) | extensions |
 | `amaya-pins` | 3-column pinned tiles grid | shell |
 | `amaya-sidebar-footer` | Bottom of the sidebar | spaces (switcher) |
 
@@ -94,15 +95,25 @@ toggle compact mode. Never animate keyboard-triggered UI.
 
 ## Extensions and themes
 
-* The **extensions** module moves Firefox's own Extensions button
-  (`#unified-extensions-button`, puzzle icon) into the sidebar top row. It
-  opens the native extensions panel and is the anchor for install and
-  permission prompts and for extension popups.
+* The **extensions** module adds a row under the address field
+  (`#amaya-ext-row`): one 28px icon per extension with a toolbar button
+  (pinned or not, in the extensions panel's order, wrapping to more rows),
+  then Firefox's own Extensions button (`#unified-extensions-button`, puzzle
+  icon). The icons mirror the real widgets (icon, badge, title, enabled); a
+  click runs the action like a toolbar click, with Firefox's popup anchored
+  to the icon; middle click and the right-click menu (Manage / Remove / Pin /
+  Report) are Firefox's. The real widgets stay in the panel, so it still
+  lists every extension. In the compact rail only the Extensions button
+  shows.
+* The Extensions button opens the native panel and is the anchor for install
+  and permission prompts and for popups opened by keyboard shortcut. Firefox
+  handles its clicks through listeners on `#navigator-toolbox`, so the module
+  attaches the same handler to the button itself (it lives outside the
+  toolbox).
 * Extensions the user pins ("Pin to toolbar") live in the hidden nav-bar for
-  Firefox; their real toolbar buttons are shown as up to three icons in the
-  top row (`#amaya-ext-pins`), as many as fit the sidebar width. The rest show
-  in the extensions panel with popups anchored to the Extensions button. The
-  nav-bar is therefore only `display: none`, never `collapsed`.
+  Firefox; their real nodes are shown in the panel (as Firefox does for a
+  hidden toolbar) and they come first in the row. The nav-bar is therefore
+  only `display: none`, never `collapsed`.
 * The command bar gets "Extensions", "Find extensions" (addons.mozilla.org)
   and one "<name> sidebar" entry per extension sidebar (the native sidebar
   launcher icons are hidden by the shell).
@@ -145,6 +156,6 @@ The built app is `dist/stage/amaya/amaya` in the main checkout
 | `modules/cmdbar/` | cmdbar |
 | `modules/privacy/` | privacy |
 | `modules/home/` | home (new tab + first run) |
-| `modules/extensions/` | extensions (Extensions button, pinned extension icons, extension command bar entries) |
+| `modules/extensions/` | extensions (extension row with icons and the Extensions button, extension command bar entries) |
 | `modules/about/` | about (the About Amaya card: Amaya release from `amaya-ui/version.json`, Gecko build, update status via `AmayaUI.update`; replaces `openAboutDialog`) |
 | `modules/update/` | update (Linux update check and prompt; reads `amaya-ui/version.json` written by `tools/amaya stage`) |
