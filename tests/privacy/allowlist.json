@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "comment": "Mirror of the machine-readable block in docs/network-calls.md (section 6). Anything not matched by 'entries' fails the test. 'deny' only labels known phone-home hosts in the report and must never overlap 'entries'. Every entry stays provisional until Gate 1 captures confirm it; 'optional' = may or may not appear. Host wildcards: '*.' = exactly one DNS label, '**.' = any depth.",
+  "entries": [
+    {
+      "host": "firefox.settings.services.mozilla.com",
+      "port": 443,
+      "purpose": "Remote Settings: security collections (add-on blocklist, CRLite, intermediates, revocations, ETP lists, fingerprinting overrides)",
+      "phase": "first-run",
+      "optional": false,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "firefox-settings-attachments.cdn.mozilla.net",
+      "port": 443,
+      "purpose": "Remote Settings attachments (CRLite filters, intermediates)",
+      "phase": "first-run",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "content-signature-2.cdn.mozilla.net",
+      "port": 443,
+      "purpose": "Remote Settings signature chain",
+      "phase": "first-run",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "safebrowsing.googleapis.com",
+      "port": 443,
+      "purpose": "Safe Browsing list updates (hash-prefix lists, no URLs)",
+      "phase": "first-run",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "shavar.services.mozilla.com",
+      "port": 443,
+      "purpose": "Safe Browsing (Mozilla-hosted lists)",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "aus5.mozilla.org",
+      "port": 443,
+      "purpose": "GMP OpenH264 update check (app/system add-on updates are compiled/policied out)",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "ciscobinary.openh264.org",
+      "port": 443,
+      "purpose": "OpenH264 plug-in download",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "versioncheck.addons.mozilla.org",
+      "port": 443,
+      "purpose": "Extension update check (bundled uBlock Origin)",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "services.addons.mozilla.org",
+      "port": 443,
+      "purpose": "Extension update check",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "addons.mozilla.org",
+      "port": 443,
+      "purpose": "Extension update download",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "addons.cdn.mozilla.net",
+      "port": 443,
+      "purpose": "Extension update download",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "ublockorigin.github.io",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "ublockorigin.pages.dev",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "cdn.statically.io",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "easylist.to",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "secure.fanboy.co.nz",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "pgl.yoyo.org",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "malware-filter.gitlab.io",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "malware-filter.pages.dev",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "publicsuffix.org",
+      "port": 443,
+      "purpose": "uBlock Origin public suffix list",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "raw.githubusercontent.com",
+      "port": 443,
+      "purpose": "uBlock Origin filter list refresh",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": true
+    }
+  ],
+  "deny": [
+    "incoming.telemetry.mozilla.org",
+    "dap-09-3.api.divviup.org",
+    "dap.services.mozilla.com",
+    "normandy.cdn.mozilla.net",
+    "classify-client.services.mozilla.com",
+    "crash-reports.mozilla.com",
+    "merino.services.mozilla.com",
+    "ohttp-merino.mozilla.fastly-edge.com",
+    "ohttp-gateway-merino.services.mozilla.com",
+    "ads.mozilla.org",
+    "mozilla-ohttp.fastly-edge.com",
+    "contile.services.mozilla.com",
+    "getpocket.com",
+    "img-getpocket.cdn.mozilla.net",
+    "location.services.mozilla.com",
+    "push.services.mozilla.com",
+    "detectportal.firefox.com",
+    "use-application-dns.net",
+    "accounts.firefox.com",
+    "token.services.mozilla.com",
+    "discovery.addons.mozilla.org",
+    "sb-ssl.google.com",
+    "www.mozilla.org",
+    "support.mozilla.org",
+    "mozilla.cloudflare-dns.com",
+    "dns.mullvad.net",
+    "dns.quad9.net"
+  ]
+}
