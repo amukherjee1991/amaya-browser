@@ -277,7 +277,9 @@
       logError(name, new Error("module registered twice"));
       return;
     }
-    const entry = { name, impl: impl || {}, inited: false };
+    // uninit runs on unload even if init threw part-way, so a module can
+    // clean up whatever it did add.
+    const entry = { name, impl: impl || {}, inited: true };
     modules.set(name, entry);
     if (currentModule && currentModule !== name) {
       log(currentModule, `registered under a different name: "${name}"`);
@@ -285,12 +287,9 @@
     if (typeof entry.impl.init === "function") {
       try {
         entry.impl.init(win);
-        entry.inited = true;
       } catch (e) {
         logError(name, e);
       }
-    } else {
-      entry.inited = true;
     }
   }
 
