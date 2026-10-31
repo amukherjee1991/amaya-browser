@@ -433,6 +433,9 @@
         canHandle: false,
         paused: false,
         upgraded: false,
+        // Loopback pages over http count as secure ("potentially
+        // trustworthy") but are not HTTPS.
+        https: uri?.scheme == "https",
         counts: { trackers: 0, fingerprinters: 0, apart: 0 },
       };
 
@@ -764,7 +767,7 @@
             : cat == "custom"
               ? "Custom blocking"
               : "Standard blocking",
-          s.upgraded ? "Upgraded to HTTPS" : "HTTPS",
+          s.upgraded ? "Upgraded to HTTPS" : s.https ? "HTTPS" : "Local connection",
         ];
         if (this.spaceName) {
           parts.push(`${this.spaceName} space`);
