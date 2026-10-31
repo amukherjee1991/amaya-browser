@@ -205,40 +205,52 @@ def reap():
         pass
 
 
+NEWTAB_JS = ("const w = Services.wm.getMostRecentWindow('navigator:browser');"
+             " w.BrowserCommands.openTab(); return w.gBrowser.tabs.length;")
+TABINFO_JS = ("const w = Services.wm.getMostRecentWindow('navigator:browser');"
+              " return w.gBrowser.tabs.length + ' tabs, selected ' + w.gBrowser.currentURI.spec;")
+BLANK_JS = ("const w = Services.wm.getMostRecentWindow('navigator:browser');"
+            " w.openTrustedLinkIn('about:blank', 'current'); return true;")
+
+
 def drive_newtab(log, deadline_s, status):
-    from marionette import Marionette, MarionetteError
+    from marionette import Marionette
     actions = status.setdefault("actions", [])
+    m = None
+    step = "connect"
     try:
         m = Marionette(timeout=min(90, deadline_s))
+        m.sock.settimeout(20)
+        step = "new session"
         m.command("WebDriver:NewSession", {"capabilities": {}})
         actions.append("marionette session")
         time.sleep(5)
-        try:
-            # Same code path as the user pressing Ctrl+T.
-            m.command("Marionette:SetContext", {"value": "chrome"})
-            m.command("WebDriver:ExecuteScript", {
-                "script": "window.BrowserCommands ? window.BrowserCommands.openTab()"
-                          " : window.BrowserOpenTab();", "args": []})
-            m.command("Marionette:SetContext", {"value": "content"})
-            handles = m.command("WebDriver:GetWindowHandles")
-            handles = handles.get("value", handles) if isinstance(handles, dict) else handles
-            m.command("WebDriver:SwitchToWindow", {"handle": handles[-1]})
-            actions.append("opened new tab (BrowserCommands.openTab)")
-        except MarionetteError as e:
-            log.note("newtab-chrome-fallback", error=str(e))
-            m.command("Marionette:SetContext", {"value": "content"})
-            r = m.command("WebDriver:NewWindow", {"type": "tab"})
-            m.command("WebDriver:SwitchToWindow", {"handle": r["handle"]})
-            actions.append("opened new tab (WebDriver:NewWindow, about:blank only)")
+        # Everything runs as chrome JS, i.e. the same code paths as the user
+        # pressing Ctrl+T and then loading a URL.  Content-context WebDriver
+        # commands hang on the new about:newtab tab in headless mode.
+        step = "set chrome context"
+        m.command("Marionette:SetContext", {"value": "chrome"})
+        step = "open new tab (BrowserCommands.openTab)"
+        m.command("WebDriver:ExecuteScript", {"script": NEWTAB_JS, "args": []})
         log.note("newtab-opened")
-        time.sleep(15)
-        m.command("WebDriver:Navigate", {"url": "about:blank"})
-        actions.append("navigated to about:blank")
+        time.sleep(3)
+        r = m.command("WebDriver:ExecuteScript", {"script": TABINFO_JS, "args": []})
+        actions.append("opened new tab via BrowserCommands.openTab (%s)"
+                       % (r.get("value") if isinstance(r, dict) else r))
+        time.sleep(12)
+        step = "load about:blank in the new tab"
+        m.command("WebDriver:ExecuteScript", {"script": BLANK_JS, "args": []})
+        actions.append("loaded about:blank in the new tab")
         log.note("about-blank-loaded")
-        m.close()
+        time.sleep(2)
+        step = "end session"
+        m.command("WebDriver:DeleteSession")
     except Exception as e:  # report, but keep idling: traffic so far is still valid
-        status["error"] = "newtab driver: %r" % (e,)
-        log.note("newtab-driver-error", error=repr(e))
+        status["error"] = "newtab driver failed at %r: %r" % (step, e)
+        log.note("newtab-driver-error", step=step, error=repr(e)[:300])
+    finally:
+        if m is not None:
+            m.close()  # frees the session so the clean quit can start a new one
 
 
 def request_quit(proc, use_marionette, log):
@@ -306,6 +318,8 @@ def run_scenario(cfg, log, scenario, proxy_port):
     if proc.poll() is None:
         progress("scenario %s: idle period over, shutting down (grace %ss)"
                  % (scenario, cfg["shutdown_grace"]))
+        if driver:
+            driver.join(timeout=30)  # Marionette serves one client at a time
         status["quit_via"] = request_quit(proc, use_marionette, log)
         try:
             proc.wait(timeout=max(cfg["shutdown_grace"], 30))
