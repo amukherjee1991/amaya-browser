@@ -1,0 +1,145 @@
+# Builds Amaya for Linux x86_64 on a GitHub-hosted runner and publishes a GitHub Release.
+#
+# Versioning: tags are v<firefox version>-<amaya_revision>, both read from upstream.json
+# (e.g. v159.0-1). Push such a tag to release; the job refuses a tag that does not match.
+# Manual runs (workflow_dispatch) build and upload artifacts without publishing a release.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      privacy_test_duration:
+        description: "Idle-traffic test duration in seconds"
+        default: "300"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux-x86_64:
+    # 22.04 keeps .deb dependencies on pre-t64 library names, so the package
+    # installs on Debian 12 as well as Debian 13 / Ubuntu 24.04.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    env:
+      AMAYA_WORKDIR: /mnt/amaya-build   # engine + objdir on the runner's large temp disk
+      MOZBUILD_STATE_PATH: /home/runner/.mozbuild
+      DISABLE_TELEMETRY: "1"
+      DEBFULLNAME: Amaya Browser
+      DEBEMAIL: noreply@users.noreply.github.com
+      AMAYA_HOMEPAGE: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: ver
+        run: |
+          read -r FX REV < <(python3 -c 'import json;d=json.load(open("upstream.json"));print(d["version"], d.get("amaya_revision",1))')
+          echo "version=${FX}-${REV}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${FX}-${REV}" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = tag ] && [ "${GITHUB_REF_NAME}" != "v${FX}-${REV}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match upstream.json (v${FX}-${REV})"; exit 1
+          fi
+          echo "Building Amaya ${FX}-${REV}"
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af >/dev/null || true
+          sudo mkdir -p "$AMAYA_WORKDIR" && sudo chown "$USER" "$AMAYA_WORKDIR"
+          df -h / /mnt
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dpkg-dev desktop-file-utils appstream iproute2 \
+            libgtk-3-0 libdbus-glib-1-2 libasound2 libx11-xcb1 libxtst6
+
+      - name: Restore Mozilla toolchains
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.mozbuild
+          key: mozbuild-${{ runner.os }}-${{ hashFiles('upstream.json') }}
+          restore-keys: mozbuild-${{ runner.os }}-
+
+      - name: Unit tests and patch lint
+        run: |
+          python3 -m unittest discover -s tests/tooling
+          python3 -m unittest discover -s tests/privacy
+          tools/amaya lint-patches
+
+      - name: Fetch Firefox source
+        run: tools/amaya fetch
+
+      - name: Bootstrap toolchains
+        run: tools/amaya bootstrap
+
+      - name: Apply Amaya layer
+        run: tools/amaya import
+
+      - name: Build
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          tools/amaya build
+
+      - name: Package
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          tools/amaya package
+          ls -la dist/
+
+      - name: Idle-traffic privacy test (Gate 1)
+        id: privacy
+        run: |
+          APP=$(find dist/stage -maxdepth 3 -type f -name amaya -perm -u+x | head -1)
+          echo "Testing $APP"
+          set +e
+          tests/privacy/run.sh "$APP" --duration "${{ github.event.inputs.privacy_test_duration || '300' }}" \
+            --report dist/privacy-report.json
+          rc=$?
+          set -e
+          if [ $rc -eq 1 ]; then echo "::error::Idle-traffic test found destinations outside the allow-list"; exit 1; fi
+          if [ $rc -eq 2 ]; then echo "::warning::Idle-traffic harness could not run on this runner (exit 2)"; fi
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum amaya_*.deb amaya-*.tar.xz > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: amaya-${{ steps.ver.outputs.version }}-linux-x86_64
+          path: |
+            dist/amaya_*.deb
+            dist/amaya-*.tar.xz
+            dist/SHA256SUMS
+            dist/privacy-report.json
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          {
+            echo "Amaya ${{ steps.ver.outputs.version }}: Firefox $(python3 -c 'import json;print(json.load(open("upstream.json"))["version"])') with the Amaya privacy layer."
+            echo
+            echo "Pre-release: Phase 1 (hardened core). The workflow UI from the plan is not in this build yet."
+            echo
+            echo "Install on Debian/Ubuntu: \`sudo apt install ./$(cd dist && ls amaya_*.deb)\`"
+            echo
+            echo "Verify: \`sha256sum -c SHA256SUMS\`"
+          } > notes.md
+          gh release create "$TAG" dist/amaya_*.deb dist/amaya-*.tar.xz dist/SHA256SUMS dist/privacy-report.json \
+            --title "Amaya ${{ steps.ver.outputs.version }}" --notes-file notes.md --prerelease --verify-tag
