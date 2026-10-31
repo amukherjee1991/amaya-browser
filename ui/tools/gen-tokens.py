@@ -15,6 +15,9 @@ MOTION = [
     ("dur-hover", "120ms"),
     ("dur-popover", "180ms"),
     ("dur-sidebar", "200ms"),
+    # Glance scrim (design README: 45%) and the split-view outer inset (layout-pane-gap).
+    ("scrim", "rgba(10, 14, 12, 0.45)"),
+    ("split-inset", "8px"),
 ]
 
 

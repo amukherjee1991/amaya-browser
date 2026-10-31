@@ -35,6 +35,8 @@
   --amaya-dur-hover: 120ms;
   --amaya-dur-popover: 180ms;
   --amaya-dur-sidebar: 200ms;
+  --amaya-scrim: rgba(10, 14, 12, 0.45);
+  --amaya-split-inset: 8px;
   --amaya-surface-window: #ebe8e1;
   --amaya-surface-page: #f9f7f2;
   --amaya-surface-raised: #ffffff;
