@@ -1,0 +1,13 @@
+# Amaya Browser — macOS mozconfig.
+# *** PLACEHOLDER for Phase M — UNTESTED. Do not ship builds from this yet. ***
+
+# Apple Silicon first; x86_64 (x86_64-apple-darwin) second.
+ac_add_options --target=aarch64-apple-darwin
+# macOS uses Mozilla's updater, pointed at an Amaya update manifest (Phase M).
+ac_add_options --enable-updater
+ac_add_options --enable-update-channel=release
+# lld is the default for clang >= 15 on macOS; nothing to set.
+# SDK comes from `mach bootstrap` (--enable-bootstrap in mozconfig.common).
+# Uncomment to point at a specific SDK instead:
+#ac_add_options --with-macos-sdk=/path/to/MacOSX.sdk
+#ac_add_options --enable-lto=cross

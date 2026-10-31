@@ -1,0 +1,10 @@
+# Amaya Browser — Linux (x86_64, later aarch64) mozconfig.
+
+# Updates are delivered through the apt repository; compile the updater out.
+ac_add_options --disable-updater
+# lld from the bootstrapped clang toolchain (already the default with clang;
+# explicit so a missing lld fails loudly instead of falling back).
+ac_add_options --enable-linker=lld
+# Link-time optimisation: smaller/faster binary, but adds a lot of link time
+# and memory. Off by default for local builds; enable for release builds.
+#ac_add_options --enable-lto=cross

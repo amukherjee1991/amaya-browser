@@ -1,0 +1,49 @@
+# Amaya Browser — shared mozconfig (all platforms).
+# Concatenated by `tools/amaya import` with configs/mozconfig.privacy and
+# configs/<platform>/mozconfig into engine/mozconfig. MOZ_OBJDIR is appended
+# by the tool (absolute path outside the engine tree).
+# Option names verified against Firefox 159.0's moz.configure files.
+
+# --- product ---------------------------------------------------------------
+# Build the desktop browser.
+ac_add_options --enable-application=browser
+# Binary / package name: `amaya`, amaya-<ver>.<locale>.<platform>.tar.xz.
+ac_add_options --with-app-name=amaya
+# application.ini Name; drives the profile directory name and system
+# integration names, so Amaya never shares a profile with Firefox.
+ac_add_options --with-app-basename=Amaya
+# Internal program name used for X11/Wayland remoting and WM_CLASS
+# (keep in sync with StartupWMClass in the .desktop file).
+ac_add_options MOZ_APP_REMOTINGNAME=amaya
+# NOTE: MOZ_APP_VENDOR cannot be set here: in 159 it is a project_flag that
+# only accepts "implied" values (browser/moz.configure sets "Mozilla"); a
+# mozconfig/env value makes configure fail. Changing it needs a patch.
+# Brand strings, icons and display name come from branding/amaya/.
+ac_add_options --with-branding=browser/branding/amaya
+# Reverse-DNS distribution id (also prefixes the macOS bundle ids).
+ac_add_options --with-distribution-id=org.amaya
+# Update channel stays "default" unless a platform file sets it; uncomment to
+# ship as the "release" channel (affects app.update.channel only).
+#ac_add_options --enable-update-channel=release
+
+# --- optimisation / build type --------------------------------------------
+# Release build settings (no developer-only code paths).
+ac_add_options --enable-release
+# Optimised compile.
+ac_add_options --enable-optimize
+# No debug assertions/symbols-heavy debug build.
+ac_add_options --disable-debug
+# Don't build test-only libraries and programs.
+ac_add_options --disable-tests
+# Use toolchains installed by `mach bootstrap` in ~/.mozbuild.
+ac_add_options --enable-bootstrap
+# Wasm-sandboxed libraries (RLBox) stay at their secure default: ON.
+# Do NOT add --without-wasm-sandboxed-libraries.
+
+# --- trust / provenance ----------------------------------------------------
+# No crash reporter: no minidump uploads to Mozilla.
+ac_add_options --disable-crashreporter
+# Enforce add-on signatures (bundled uBlock Origin is AMO-signed).
+export MOZ_REQUIRE_SIGNING=1
+# Embed source repo/changeset info (from sourcestamp.txt) in the build.
+export MOZ_INCLUDE_SOURCE_INFO=1
