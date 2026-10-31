@@ -60,3 +60,12 @@ tools/amaya import                 # re-apply the whole queue cleanly
 ```sh
 python3 -m unittest discover -s tests/tooling -v
 ```
+
+## Firefox release watch
+
+`tools/firefox_release_watch.py` compares `upstream.json` with Mozilla's latest
+release (product-details) and prints JSON. The **Firefox release watch** GitHub
+workflow (`.github/workflows/firefox-release-watch.yml`) runs it every 6 hours
+and opens one `upstream-release` issue per new Firefox version, with release
+notes, security advisories, the `tools/amaya rebase <version>` steps and a
+checklist. Run it by hand from the Actions tab ("Run workflow").

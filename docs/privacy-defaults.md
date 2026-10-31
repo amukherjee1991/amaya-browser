@@ -13,6 +13,7 @@ Network effects are listed in [network-calls.md](network-calls.md).
 | Enterprise policies | `settings/policies.json` | `<appdir>/distribution/policies.json` | Features that have a policy switch (studies, Nimbus, Suggest, AI, search engines, accounts). |
 | Autoconfig | `settings/autoconfig.js` + `settings/amaya.cfg` | `<appdir>/defaults/pref/autoconfig.js`, `<appdir>/amaya.cfg` | All prefs. `defaultPref` = user can change it; `lockPref` = only where justified (below); `pref` = only behind a one-time `amaya.migration.*` marker. |
 | Bundled extensions | `settings/extensions.json` | `<appdir>/distribution/extensions/<id>.xpi` | uBlock Origin 1.75.0 (sha256 verified). |
+| Workflow UI (autoconfig unsandboxed) | `settings/autoconfig.js` (`general.config.sandbox_enabled=false`), `amaya.cfg` §12, `ui/` | `<appdir>/amaya-ui/` | Phase 2 interface (see `ui/README.md`), loaded as privileged chrome JS by `amaya.cfg`. **Trade-off:** `amaya.cfg` now runs with full privileges instead of the pref-only sandbox. Both it and `amaya-ui/` are our own files in the install directory, writable only by whoever can already replace the browser binary, so no new attack surface; the cost is that a bug in the UI or the loader block runs privileged (the block is in `try/catch`, since an uncaught error in an unsandboxed `.cfg` quits the browser). All pref lines behave exactly as before. |
 
 Side effect of policies: Settings shows "Your browser is being managed by your
 organization". That is expected (LibreWolf does the same).
