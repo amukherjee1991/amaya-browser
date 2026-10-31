@@ -57,6 +57,54 @@ class StageTests(ToolTestCase):
         with quiet(), self.assertRaisesRegex(AmayaError, "invalid extension id"):
             stage(self.ctx(), self.appdir)
 
+    def write_ui(self):
+        ui = self.repo / "ui"
+        files = {
+            "loader.js": "// loader\n",
+            "tokens.css": ":root{}\n",
+            "modules.json": '["shell"]\n',
+            "README.md": "# contract\n",
+            "modules/shell/shell.js": "// shell\n",
+            "modules/shell/shell.css": "/* shell */\n",
+            "modules/shell/README.md": "# shell\n",
+            "modules/shell/icons/x.svg": "<svg/>\n",
+            "modules/shell/design/keep.txt": "nested design/ is not excluded\n",
+            "design/tokens.json": "{}\n",
+            "tools/shot.py": "# tool\n",
+        }
+        for rel, text in files.items():
+            (ui / rel).parent.mkdir(parents=True, exist_ok=True)
+            (ui / rel).write_text(text)
+        return ui
+
+    def test_stage_copies_ui_without_design_tools_or_docs(self):
+        self.write_ext()
+        ui = self.write_ui()
+        dest = self.appdir / "amaya-ui"
+        dest.mkdir()
+        (dest / "stale.js").write_text("// from an older stage\n")
+        with quiet():
+            stage(self.ctx(), self.appdir)
+        staged = sorted(str(p.relative_to(dest)) for p in dest.rglob("*") if p.is_file())
+        self.assertEqual(staged, [
+            "loader.js",
+            "modules.json",
+            "modules/shell/design/keep.txt",
+            "modules/shell/icons/x.svg",
+            "modules/shell/shell.css",
+            "modules/shell/shell.js",
+            "tokens.css",
+        ])
+        self.assertEqual((dest / "loader.js").read_text(),
+                         (ui / "loader.js").read_text())
+
+    def test_stage_without_ui_warns(self):
+        self.write_ext()
+        with quiet() as (_, err):
+            stage(self.ctx(), self.appdir)
+        self.assertIn("ui/loader.js not found", err.getvalue())
+        self.assertFalse((self.appdir / "amaya-ui").exists())
+
     def test_missing_settings_warn_not_fail(self):
         for f in (self.repo / "settings").iterdir():
             f.unlink()
