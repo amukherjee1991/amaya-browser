@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Amaya mark: a single rising stroke (a crossbar-less A), teal at the base and amber at the sunrise. Full-colour master, 32 px and up. -->
+  <defs>
+    <linearGradient id="amaya-mark-l" x1="60" y1="212.5" x2="128" y2="43.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2BB0C6"/><stop offset="1" stop-color="#3DD0C6"/></linearGradient>
+    <linearGradient id="amaya-mark-r" x1="128" y1="43.5" x2="196" y2="212.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3DD0C6"/><stop offset="0.4" stop-color="#2CAEC5"/><stop offset="1" stop-color="#F2A65A"/></linearGradient>
+  </defs>
+  <path fill="url(#amaya-mark-r)" d="M107.59 51.71L175.59 220.71A22 22 0 0 0 216.41 204.29L148.41 35.29A22 22 0 0 0 107.59 51.71Z"/>
+  <path fill="url(#amaya-mark-l)" d="M80.41 220.71L148.41 51.71A22 22 0 0 0 107.59 35.29L39.59 204.29A22 22 0 0 0 80.41 220.71Z"/>
+</svg>

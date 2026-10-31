@@ -4,13 +4,13 @@
 
 @media not ((prefers-contrast) and (prefers-color-scheme: light)) {
   #aboutDialogContainer {
-    background-color: #141a3a;
-    color: #f4f6fb;
+    background-color: #0e2630;
+    color: #f2f6f5;
     color-scheme: dark;
   }
 
   #bottomBox {
-    background-color: hsla(230, 49%, 8%, 0.5);
+    background-color: hsla(197, 55%, 6%, 0.5);
   }
 }
 

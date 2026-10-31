@@ -45,10 +45,12 @@ MACOS = os.path.join(ROOT, "macos")
 APP_ID = "org.amaya.Browser"
 
 # Palette (keep in sync with README.md)
-MIDNIGHT = "#141A3A"
-MIDNIGHT_2 = "#232C66"
-MIST = "#F4F6FB"
-LANTERN = "#FFC861"
+TILE_TOP = "#1C4350"  # app-tile gradient, top-left
+TILE_BOTTOM = "#0E2630"  # app-tile gradient, bottom-right
+INK = "#10242E"
+MIST = "#F2F6F5"
+TEAL = "#0E7C70"
+TEAL_ON_DARK = "#5FE0CC"
 
 
 def read(name):
@@ -56,9 +58,12 @@ def read(name):
         return f.read()
 
 
-ICON = read("amaya-icon.svg")
-ICON_SMALL = read("amaya-icon-small.svg")
-ICON_PRIVATE = read("amaya-icon-private.svg")
+MARK = read("amaya-mark.svg")  # bare gradient stroke, >= 32 px
+MARK_SMALL = read("amaya-mark-small.svg")  # flat teal, thicker, < 32 px
+APP = read("amaya-app-icon.svg")  # tile + gradient stroke, > 32 px
+APP_SMALL = read("amaya-app-icon-small.svg")  # tile + flat stroke, <= 32 px
+APP_PRIVATE = read("amaya-app-icon-private.svg")
+APP_PRIVATE_SMALL = read("amaya-app-icon-private-small.svg")
 SYMBOLIC = read("amaya-symbolic.svg")
 WORDMARK = read("amaya-wordmark.svg")
 DOCUMENT = read("document.svg")
@@ -73,8 +78,15 @@ WORDMARK_RATIO = _vb[3] / _vb[2]  # height / width
 
 
 def mark(size):
-    """The colour mark master appropriate for a render of `size` px."""
-    return ICON_SMALL if size <= 48 else ICON
+    """Bare mark master for a render of `size` px (flat teal below 32 px)."""
+    return MARK_SMALL if size < 32 else MARK
+
+
+def app(size, private=False):
+    """App-icon (tile) master for a render of `size` px."""
+    if private:
+        return APP_PRIVATE_SMALL if size <= 32 else APP_PRIVATE
+    return APP_SMALL if size <= 32 else APP
 
 
 # --------------------------------------------------------------------------
@@ -108,10 +120,11 @@ def doc(w, h, *parts, defs=""):
 
 
 def night_bg(w, h, gid="night"):
+    """Dark teal-navy backdrop (same gradient as the app tile)."""
     defs = (
-        f'<linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1">'
-        f'<stop offset="0" stop-color="{MIDNIGHT}"/>'
-        f'<stop offset="1" stop-color="{MIDNIGHT_2}"/></linearGradient>'
+        f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0" stop-color="{TILE_TOP}"/>'
+        f'<stop offset="1" stop-color="{TILE_BOTTOM}"/></linearGradient>'
     )
     return defs, f'<rect width="{w}" height="{h}" fill="url(#{gid})"/>'
 
@@ -122,18 +135,12 @@ def centered(svg, canvas, size, dy=0):
 
 
 def mac_tile(size, private=False):
-    """macOS-style app icon: rounded-square midnight tile with the mark.
-
-    Follows Apple's grid: 824/1024 tile with 100px margins, ~185 radius."""
+    """macOS app icon: the app tile on Apple's grid (824/1024 tile, 100 px
+    margins). The tile masters draw the tile at 8..248 of 256."""
     s = size / 1024
-    defs, _ = night_bg(1, 1, "tile")
-    tile = (
-        f'<rect x="{100*s:.3f}" y="{100*s:.3f}" width="{824*s:.3f}" height="{824*s:.3f}" '
-        f'rx="{185*s:.3f}" fill="url(#tile)"/>'
-    )
-    m_size = 560 * s
-    m = mark(int(m_size)) if not private else ICON_PRIVATE
-    return doc(size, size, tile, centered(m, size, m_size, dy=-8 * s), defs=defs)
+    box = 824 * 256 / 240 * s
+    off = 100 * s - 8 * box / 256
+    return doc(size, size, place(app(size, private), f"{off:.3f}", f"{off:.3f}", f"{box:.3f}", f"{box:.3f}"))
 
 
 def full(svg, size):
@@ -253,11 +260,13 @@ def to_jpg(png):
 def build_jobs():
     j = {}
 
-    # Plain mark at all the sizes anything needs.
-    for s in (16, 22, 24, 32, 44, 48, 64, 88, 100, 128, 192, 256, 384, 512, 1024):
+    # Bare mark (about dialog, Windows tiles) and app tile at every size used.
+    for s in (192, 384):
         j[f"mark{s}"] = (full(mark(s), s), s, s)
+    for s in (16, 22, 24, 32, 48, 64, 88, 100, 128, 256, 512):
+        j[f"app{s}"] = (full(app(s), s), s, s)
     for s in (16, 32, 48, 192, 256, 384):
-        j[f"private{s}"] = (full(ICON_PRIVATE, s), s, s)
+        j[f"private{s}"] = (full(app(s, private=True), s), s, s)
     for s in (16, 32, 44, 48, 64, 128, 256, 512, 1024):
         j[f"doc{s}"] = (full(DOCUMENT, s), s, s)
     j["docpdf256"] = (full(DOCUMENT_PDF, 256), 256, 256)
@@ -267,37 +276,40 @@ def build_jobs():
     for s in (16, 32, 64, 128, 256, 512, 1024):
         j[f"tile{s}"] = (mac_tile(s), s, s)
 
-    # Windows start-menu tiles (transparent; the manifest supplies #14171a).
+    # Windows start-menu tiles: bare mark on transparent; the manifests
+    # supply the tile colour (#0e2630, private #7d5291).
     def tile(svg, w, h, size, dy=0):
         return (doc(w, h, place(svg, (w - size) / 2, (h - size) / 2 + dy, size, size)), w, h)
 
-    j["ve150"] = tile(ICON, 300, 300, 150, -20)
-    j["ve70"] = tile(ICON, 142, 142, 96)
-    j["pb150"] = tile(ICON_PRIVATE, 300, 300, 150, -20)
-    j["pb70"] = tile(ICON_PRIVATE, 142, 142, 96)
-    j["msix_large"] = tile(ICON, 620, 620, 300, -30)
-    j["msix_wide"] = tile(ICON, 620, 300, 160, -20)
+    j["ve150"] = tile(MARK, 300, 300, 150, -20)
+    j["ve70"] = tile(MARK, 142, 142, 96)
+    j["pb150"] = tile(MARK, 300, 300, 150, -20)
+    j["pb70"] = tile(MARK, 142, 142, 96)
+    j["msix_large"] = tile(MARK, 620, 620, 300, -30)
+    j["msix_wide"] = tile(MARK, 620, 300, 160, -20)
 
     # Legacy about.png (300x236, opaque).
     defs, bg = night_bg(300, 236)
-    j["about"] = (doc(300, 236, bg, place(ICON, 95, 28, 110, 110), wordmark(80, 160, 140, MIST), defs=defs), 300, 236)
+    j["about"] = (doc(300, 236, bg, place(MARK, 100, 26, 100, 100), wordmark(85, 150, 130, MIST), defs=defs), 300, 236)
 
     # NSIS installer bitmaps.
     defs, bg = night_bg(164, 314)
     j["wizWatermark"] = (
-        doc(164, 314, bg, place(ICON, 37, 86, 90, 90), wordmark(32, 196, 100, MIST), defs=defs),
+        doc(164, 314, bg, place(MARK, 42, 86, 80, 80), wordmark(37, 190, 90, MIST), defs=defs),
         164, 314,
     )
     white = '<rect width="150" height="57" fill="#FFFFFF"/>'
-    j["wizHeader"] = (doc(150, 57, white, place(ICON_SMALL, 99, 6, 45, 45)), 150, 57)
-    j["wizHeaderRTL"] = (doc(150, 57, white, place(ICON_SMALL, 6, 6, 45, 45)), 150, 57)
+    j["wizHeader"] = (doc(150, 57, white, place(APP, 99, 6, 45, 45)), 150, 57)
+    j["wizHeaderRTL"] = (doc(150, 57, white, place(APP, 6, 6, 45, 45)), 150, 57)
 
-    # Stub installer background (text is drawn on top in white).
+    # Stub installer background (text is drawn on top in white): faint
+    # oversized strokes rising from the bottom edge.
     defs, bg = night_bg(1344, 822)
+    ghost = SYMBOLIC.replace("#2e3436", "#FFFFFF")
     hills = (
-        '<g fill="#FFFFFF" fill-opacity="0.05">'
-        + place(ICON_SMALL.replace("url(#amaya-arch-small)", "#FFFFFF").replace(LANTERN, "none"), 1010, 470, 420, 420)
-        + place(ICON_SMALL.replace("url(#amaya-arch-small)", "#FFFFFF").replace(LANTERN, "none"), -90, 560, 300, 300)
+        '<g opacity="0.05">'
+        + place(ghost, 960, 420, 520, 520)
+        + place(ghost, -120, 560, 340, 340)
         + "</g>"
     )
     j["bgstub"] = (doc(1344, 822, bg, hills, defs=defs), 1344, 822)
@@ -306,8 +318,8 @@ def build_jobs():
     # dsstore: app at (209, 190), Applications link at (472, 190).
     defs, bg = night_bg(1440, 880)
     defs += (
-        '<radialGradient id="glow"><stop offset="0" stop-color="#45D0E3" stop-opacity="0.55"/>'
-        '<stop offset="1" stop-color="#45D0E3" stop-opacity="0"/></radialGradient>'
+        f'<radialGradient id="glow"><stop offset="0" stop-color="{TEAL_ON_DARK}" stop-opacity="0.35"/>'
+        f'<stop offset="1" stop-color="{TEAL_ON_DARK}" stop-opacity="0"/></radialGradient>'
     )
     dmg = doc(
         1440, 880, bg,
@@ -315,7 +327,7 @@ def build_jobs():
         f'<rect x="330" y="524" width="176" height="42" rx="21" fill="{MIST}"/>',
         '<path d="M600 380H830M790 340L834 380L790 420" fill="none" stroke="#FFFFFF" '
         'stroke-opacity="0.85" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>',
-        f'<g opacity="0.35">{wordmark(560, 720, 320, MIST)}</g>',
+        f'<g opacity="0.35">{wordmark(580, 720, 280, MIST)}</g>',
         defs=defs,
     )
     j["dmg_background"] = (dmg, 1440, 880)
@@ -327,7 +339,7 @@ def outputs(r):
     o = {}
     a = "amaya/"
     for s in (16, 22, 24, 32, 48, 64, 128, 256):
-        o[f"{a}default{s}.png"] = r[f"mark{s}"]
+        o[f"{a}default{s}.png"] = r[f"app{s}"]
 
     c = a + "content/"
     o[c + "about-logo.png"] = r["mark192"]
@@ -336,8 +348,8 @@ def outputs(r):
     o[c + "about-logo-private@2x.png"] = r["private384"]
     o[c + "about.png"] = to_png_rgb(r["about"])
 
-    o[a + "firefox.ico"] = ico([r["mark16"], r["mark32"], r["mark48"], r["mark256"]])
-    o[a + "firefox64.ico"] = ico([r["mark16"], r["mark32"], r["mark48"], r["mark64"]])
+    o[a + "firefox.ico"] = ico([r["app16"], r["app32"], r["app48"], r["app256"]])
+    o[a + "firefox64.ico"] = ico([r["app16"], r["app32"], r["app48"], r["app64"]])
     o[a + "document.ico"] = ico([r["doc16"], r["doc32"], r["doc48"], r["doc256"]])
     o[a + "document_pdf.ico"] = ico([r["docpdf256"]])
     o[a + "pbmode.ico"] = ico([r["private16"], r["private32"], r["private48"], r["private256"]])
@@ -359,11 +371,11 @@ def outputs(r):
     o[m + "MedTile.scale-200.png"] = r["ve150"]
     o[m + "SmallTile.scale-200.png"] = r["ve70"]
     o[m + "Square150x150Logo.scale-200.png"] = r["ve150"]
-    o[m + "Square44x44Logo.altform-lightunplated_targetsize-256.png"] = r["mark256"]
-    o[m + "Square44x44Logo.altform-unplated_targetsize-256.png"] = r["mark256"]
-    o[m + "Square44x44Logo.scale-200.png"] = r["mark88"]
-    o[m + "Square44x44Logo.targetsize-256.png"] = r["mark256"]
-    o[m + "StoreLogo.scale-200.png"] = r["mark100"]
+    o[m + "Square44x44Logo.altform-lightunplated_targetsize-256.png"] = r["app256"]
+    o[m + "Square44x44Logo.altform-unplated_targetsize-256.png"] = r["app256"]
+    o[m + "Square44x44Logo.scale-200.png"] = r["app88"]
+    o[m + "Square44x44Logo.targetsize-256.png"] = r["app256"]
+    o[m + "StoreLogo.scale-200.png"] = r["app100"]
     o[m + "Wide310x150Logo.scale-200.png"] = r["msix_wide"]
 
     o[a + "wizHeader.bmp"] = to_bmp(r["wizHeader"])
@@ -373,19 +385,19 @@ def outputs(r):
     o[a + "background.png"] = r["dmg_background"]
 
     # Vector copies used directly by the browser chrome.
-    o[c + "about-logo.svg"] = strip_comments(ICON).encode()
+    o[c + "about-logo.svg"] = strip_comments(MARK).encode()
     o[c + "document_pdf.svg"] = strip_comments(DOCUMENT_PDF).encode()
     o[c + "about-wordmark.svg"] = chrome_wordmark('fill="context-fill"').encode()
     o[c + "firefox-wordmark.svg"] = chrome_wordmark(
-        f'fill="context-fill light-dark({MIDNIGHT}, {MIST})"',
+        f'fill="context-fill light-dark({INK}, {MIST})"',
         style="<style>:root { color-scheme: light dark }</style>",
     ).encode()
 
     # Linux desktop integration (consumed by packaging/).
-    o[f"linux/{APP_ID}.svg"] = strip_comments(ICON).encode()
+    o[f"linux/{APP_ID}.svg"] = strip_comments(APP).encode()
     o[f"linux/{APP_ID}-symbolic.svg"] = strip_comments(SYMBOLIC).encode()
     for s in (16, 22, 24, 32, 48, 64, 128, 256, 512):
-        o[f"linux/hicolor/{s}x{s}/apps/{APP_ID}.png"] = r[f"mark{s}"]
+        o[f"linux/hicolor/{s}x{s}/apps/{APP_ID}.png"] = r[f"app{s}"]
 
     # macOS asset-catalog input for Assets.car (compiled with actool on a Mac).
     iconset = "macos/AppIcon.xcassets/AppIcon.appiconset/"

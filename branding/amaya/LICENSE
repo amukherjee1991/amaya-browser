@@ -2,7 +2,7 @@ The build files in this directory (moz.build, jar.mn, configure.sh, prefs,
 CSS, NSIS and manifest files) are derived from Mozilla's browser/branding
 templates and are under the MPL 2, as below.
 
-The Amaya name, the Amaya archway logo and the artwork in this directory are
+The Amaya name, the Amaya rising-stroke logo and the artwork in this directory are
 original to the Amaya project (sources in branding/source/). They are not
 Mozilla trademarks, and no Mozilla trademark or logo is used here. A trademark
 search on "Amaya" is still pending; do not treat the name as cleared.

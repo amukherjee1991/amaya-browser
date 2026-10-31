@@ -11,39 +11,59 @@ in an Amaya build.
 
 ## The mark
 
-A pointed **archway**: an "A" with no crossbar, with a **lantern dot** where the
-crossbar would be. It reads as "A", as a doorway (a safe way through) and as a
-light at night. It is a flat silhouette with no fox, flame, globe, rings or
-swirl, so it does not look like Firefox, Chrome, Brave, Zen, Edge, Vivaldi or
-Arc. It stays legible at 16×16. A separate small-size master snaps the legs to
-pixel boundaries for this.
+A **single rising stroke** shaped like "Λ": an A without a crossbar, drawn as one
+thick line with fully rounded caps and a rounded apex. The colour runs along the
+stroke, from teal at the base of the left leg, through teal at the apex, to
+amber at the end of the right leg ("teal at the base and amber at the
+sunrise"). There is no fox, flame, globe, rings or swirl, so the mark does not
+look like Firefox, Chrome, Brave, Zen, Edge, Vivaldi or Arc.
+
+* **App icon:** the gradient Λ centred on a rounded-square tile (radius about
+  22.5 %, close to Apple's) in a dark teal-navy gradient. The tile is used for
+  `default*.png`, `.ico`, `.icns`, the Linux hicolor PNGs, the Linux scalable
+  icon and the macOS icon set.
+* **Small sizes (below 32 px):** the gradient becomes **flat teal** and the
+  stroke gets a little thicker. On the tile (16 to 32 px) the stroke uses the
+  dark-surface teal and is drawn slightly larger, so it still reads at 16 px.
+* **Symbolic / menu bar:** a single colour that follows the theme. The Linux
+  symbolic icon uses `#2e3436`, which GTK recolours.
+* **Private browsing:** the same tile in plum instead of teal-navy.
+* **Wordmark:** lowercase **amaya**, ink on light and near-white on dark. There
+  is no "os" suffix, because this product is the browser.
 
 ### Palette
 
-| Name     | Hex       | Used for |
-|----------|-----------|----------|
-| Rain     | `#45D0E3` | Arch gradient, top-left |
-| Indigo   | `#4A55E0` | Arch gradient, bottom-right |
-| Lantern  | `#FFC861` | Lantern dot |
-| Midnight | `#141A3A` | Dark backgrounds (about dialog, tiles, installers), wordmark on light |
-| Midnight 2 | `#232C66` | Bottom of background gradients |
-| Mist     | `#F4F6FB` | Light surfaces, wordmark on dark, private-mode lantern |
-| Deep Indigo | `#3346C2` | Accents (PDF band, installer progress bar, jump-list icons) |
-| Dusk     | `#A88BFF` → `#5B33C9` | Private-browsing arch gradient |
+Colours were sampled from the approved logo reference.
 
-Wordmark typeface: **Inter SemiBold** (SIL OFL 1.1), tracking −1 %, converted
-to outlines. No font is needed at runtime.
+| Name | Hex | Used for |
+|---|---|---|
+| Teal base | `#2BB0C6` | Stroke gradient: foot of the left leg |
+| Teal apex | `#3DD0C6` | Stroke gradient: apex |
+| Teal mid | `#2CAEC5` | Stroke gradient: upper right leg |
+| Amber | `#F2A65A` | Stroke gradient: foot of the right leg ("sunrise") |
+| Teal | `#0E7C70` | Flat small mark on light, accents (PDF band, jump-list plus, installer progress) |
+| Teal on dark | `#5FE0CC` | Flat small mark on dark / on the tile |
+| Tile top | `#1C4350` | App tile and dark backgrounds, gradient start |
+| Tile bottom | `#0E2630` | App tile and dark backgrounds, gradient end; about dialog and Windows tile colour |
+| Plum | `#9667AB` → `#7D5291` | Private-browsing tile |
+| Ink | `#10242E` | Wordmark on light, jump-list outlines |
+| Mist | `#F2F6F5` | Wordmark on dark, text on dark backgrounds |
+
+Wordmark typeface: **Inter SemiBold** (SIL OFL 1.1), lowercase and untracked,
+converted to outlines. No font is needed at runtime.
 
 ## Layout
 
 ```
 branding/
 ├── source/                 SVG masters (edit these)
-│   ├── amaya-icon.svg          full-colour mark (≥ 64 px renders, scalable icon)
-│   ├── amaya-icon-small.svg    16-grid-hinted mark (≤ 48 px renders)
-│   ├── amaya-icon-private.svg  private-browsing variant
-│   ├── amaya-symbolic.svg      monochrome (GNOME symbolic, macOS menu bar)
-│   ├── amaya-wordmark.svg      "Amaya" wordmark
+│   ├── amaya-mark.svg                gradient Λ, bare (about-logo, Windows tiles, artwork)
+│   ├── amaya-mark-small.svg          flat teal, thicker stroke (< 32 px)
+│   ├── amaya-app-icon.svg            tile + gradient Λ (app icon, > 32 px; Linux scalable icon)
+│   ├── amaya-app-icon-small.svg      tile + flat teal Λ (16–32 px)
+│   ├── amaya-app-icon-private*.svg   plum private-browsing tile (+ small variant)
+│   ├── amaya-symbolic.svg            monochrome (GNOME symbolic, macOS menu bar)
+│   ├── amaya-wordmark.svg            lowercase "amaya" wordmark
 │   ├── document.svg, document_pdf.svg, newtab.svg, newwindow.svg
 ├── tools/
 │   ├── generate.py         regenerates every raster/ico/icns/bmp/jpg (idempotent)
