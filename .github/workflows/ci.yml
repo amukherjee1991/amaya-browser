@@ -36,7 +36,7 @@ jobs:
         run: for f in settings/*.json tests/privacy/allowlist.json; do python3 -m json.tool "$f" >/dev/null && echo "ok $f"; done
 
       - name: Shellcheck packaging scripts
-        run: shellcheck packaging/debian/*.sh packaging/debian/apt-repo/*.sh
+        run: shellcheck packaging/debian/*.sh packaging/debian/apt-repo/*.sh packaging/debian/preinst packaging/debian/postinst packaging/debian/prerm packaging/debian/postrm
 
       - name: .deb smoke test (fake payload)
         run: packaging/debian/test-build-deb.sh

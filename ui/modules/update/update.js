@@ -4,24 +4,30 @@
  * Firefox's updater is compiled out on Linux (Amaya ships as a .deb and a
  * .tar.xz), so this module does the minimum by hand:
  *
- *   1. Check.  ~60 s after the app starts, then every 12 h, and on demand from
- *      the command bar, GET <amaya.update.url> (a static latest.json):
+ *   1. Check.  ~60 s after the app starts, then every 4 h, when a window
+ *      becomes active again more than 1 h after the last check, and on demand
+ *      from the command bar, GET <amaya.update.url> (a static latest.json):
  *        {"version": "159.0-3", "prerelease": true,
  *         "files": {"deb": "...deb", "tar": "...tar.xz", "sums": "SHA256SUMS"}}
  *      Files are resolved relative to the manifest URL.  The request carries
  *      no cookies, no referrer, no custom headers and no identifiers; the only
  *      thing the server learns is that an Amaya asked (IP + standard headers).
- *      One check per app session across windows: the window that runs it
- *      claims the slot by writing amaya.update.lastCheck (seconds) first.
+ *      Checks are shared across windows: the window that runs one claims it
+ *      by writing amaya.update.lastCheck (seconds) first.
  *   2. Prompt.  A small card in the sidebar above the spaces switcher (or a
  *      notification bar when the shell is not loaded).  "Later" remembers the
  *      version in amaya.update.dismissed; the next version shows again, and
  *      "Check for updates" in the command bar always shows it.
- *   3. Update.  Downloads the .deb (install dir under /usr/lib/amaya) or the
- *      .tar.xz (anything else) plus SHA256SUMS into your Downloads folder,
- *      verifies the sha256 and then opens the .deb with the desktop's software
- *      installer (which asks for the admin password) or reveals the archive.
- *      Nothing is installed by Amaya itself.
+ *   3. Update.  A .deb install with Amaya's apt source
+ *      (/etc/apt/sources.list.d/amaya.sources, shipped by the .deb, not set to
+ *      "Enabled: no") gets the release through apt, so Update opens the
+ *      system updater (update-manager, else GNOME Software's updates page;
+ *      started with nsIProcess, no shell) or says to run `sudo apt upgrade`.
+ *      Otherwise it downloads the .deb (install dir under /usr/lib/amaya) or
+ *      the .tar.xz (anything else) plus SHA256SUMS into your Downloads
+ *      folder, verifies the sha256 and then opens the .deb with the desktop's
+ *      software installer (which asks for the admin password) or reveals the
+ *      archive.  Nothing is installed by Amaya itself.
  *
  * Prefs:
  *   amaya.update.enabled        bool, default true   automatic checks
@@ -33,14 +39,17 @@
  *                                                    every window shows it
  *   amaya.update.currentVersion string  DEVELOPMENT ONLY: used only when
  *                                       <ui dir>/version.json is missing
- *   amaya.update.installType    "deb" | "tar"  DEVELOPMENT/TEST override
+ *   amaya.update.installType    "apt" | "deb" | "tar"  DEVELOPMENT/TEST
+ *                                       override ("apt" = .deb with the apt
+ *                                       source)
  *
  * The current version comes from <ui dir>/version.json, written by
  * `tools/amaya stage` from upstream.json.  Without it (a development run with
  * AMAYA_UI_DIR) the version is unknown and nothing is ever prompted.
  *
  * In headless runs (MOZ_HEADLESS) the downloaded file is never launched or
- * revealed; the state records what would have happened.
+ * revealed and no updater is started; the state records what would have
+ * happened.
  */
 (function () {
   "use strict";
@@ -68,7 +77,15 @@
   const NOTES_URL = "https://github.com/amukherjee1991/amaya-browser/releases/tag/v";
   const DEB_PREFIX = "/usr/lib/amaya";
   const FIRST_DELAY_MS = 60 * 1000;
-  const INTERVAL_MS = 12 * 60 * 60 * 1000;
+  const INTERVAL_MS = 4 * 60 * 60 * 1000;
+  // A window becoming active re-checks when the last check is this old.
+  const FOCUS_STALE_MS = 60 * 60 * 1000;
+  const APT_SOURCES = "/etc/apt/sources.list.d/amaya.sources";
+  // System updaters for apt installs, in order of preference.
+  const UPDATERS = [
+    ["/usr/bin/update-manager", []],
+    ["/usr/bin/gnome-software", ["--mode=updates"]],
+  ];
   const TICK_MS = 60 * 1000;
   const TOPIC = "amaya-update-state";
   const FILE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._+~-]{0,200}$/;
@@ -198,11 +215,37 @@
     return currentVersionPromise;
   }
 
+  // "apt" (a .deb with Amaya's apt source), "deb" or "tar".  The apt part
+  // is read from disk by refreshApt(); this stays synchronous for rendering.
+  let aptSource = false;
   function installType() {
     const o = prefs.getStringPref(PREF.installType, "");
-    if (o === "deb" || o === "tar") {
+    if (o === "apt" || o === "deb" || o === "tar") {
       return o;
     }
+    const type = packagedType();
+    return type === "deb" && aptSource ? "apt" : type;
+  }
+
+  // Is /etc/apt/sources.list.d/amaya.sources there and not disabled?
+  async function refreshApt() {
+    let on = false;
+    if (packagedType() === "deb") {
+      try {
+        const text = await IOUtils.readUTF8(APT_SOURCES);
+        on = !/^\s*Enabled:\s*no\s*$/im.test(text);
+      } catch (e) {
+        // No source (an older .deb, or removed by hand): download instead.
+      }
+    }
+    if (on !== aptSource) {
+      aptSource = on;
+      render();
+    }
+    return on;
+  }
+
+  function packagedType() {
     let dir = "";
     try {
       dir = Services.dirsvc.get("GreD", Ci.nsIFile).path;
@@ -317,6 +360,7 @@
         return { result: "bad-url" };
       }
       prefs.setIntPref(PREF.lastCheck, Math.floor(Date.now() / 1000));
+      await refreshApt();
       let manifest;
       try {
         const res = await fetchOk(url);
@@ -354,7 +398,7 @@
     }
   }
 
-  // Scheduled checks: ~60 s after the app starts, then every 12 h.  Every
+  // Scheduled checks: ~60 s after the app starts, then every 4 h.  Every
   // window ticks; the first one that finds a check due claims it by writing
   // amaya.update.lastCheck before it fetches (same thread, so no race).
   function processStart() {
@@ -380,8 +424,23 @@
     return last < start || now - last >= INTERVAL_MS || last > now + INTERVAL_MS;
   }
 
+  // When a window becomes active: check if the last one is over an hour old.
+  function focusDue(now = Date.now()) {
+    if (!enabled() || now - processStart() < FIRST_DELAY_MS) {
+      return false;
+    }
+    const last = prefs.getIntPref(PREF.lastCheck, 0) * 1000;
+    return now - last >= FOCUS_STALE_MS || last > now + FOCUS_STALE_MS;
+  }
+
   function tick() {
     if (!checking && checkDue()) {
+      check().catch(e => log(`check: ${e}`));
+    }
+  }
+
+  function onActivate() {
+    if (!checking && focusDue()) {
       check().catch(e => log(`check: ${e}`));
     }
   }
@@ -403,7 +462,11 @@
     if (!m || busy()) {
       return { result: busy() ? "busy" : "none" };
     }
+    await refreshApt();
     const type = installType();
+    if (type === "apt") {
+      return openSystemUpdater(m);
+    }
     const name = m.files[type];
     if (!name || !m.files.sums) {
       openNotes(m.version);
@@ -532,6 +595,39 @@
     return { result: "ready", type, path, opened, launchSkipped: skipped };
   }
 
+  // apt installs: hand over to the system updater, which installs from
+  // Amaya's apt repository with the admin password.  nsIProcess runs the
+  // program directly (no shell) and does not wait for it.
+  function openSystemUpdater(m) {
+    const skipped = headless();
+    for (const [path, args] of UPDATERS) {
+      let file;
+      try {
+        file = localFile(path);
+        if (!file.exists() || !file.isExecutable()) {
+          continue;
+        }
+      } catch (e) {
+        continue;
+      }
+      if (!skipped) {
+        try {
+          const proc = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+          proc.init(file);
+          proc.runAsync(args, args.length);
+        } catch (e) {
+          log(`cannot start ${path}: ${e}`);
+          continue;
+        }
+      }
+      const app = path.endsWith("/update-manager") ? "Software Updater" : "Software";
+      setState({ phase: "handed-off", version: m.version, app, path, skipped }, { broadcast: true });
+      return { result: "updater", path, launchSkipped: skipped };
+    }
+    setState({ phase: "handed-off", version: m.version, app: null, path: null, skipped }, { broadcast: true });
+    return { result: "no-updater" };
+  }
+
   function revealFile(path) {
     if (headless()) {
       return;
@@ -625,6 +721,17 @@
         ],
       };
     }
+    if (s?.phase === "handed-off") {
+      return {
+        kind: "ready",
+        title: s.app ? `Finish in ${s.app}` : `Install Amaya ${s.version}`,
+        text: s.app
+          ? `Install Amaya ${s.version} there, then restart Amaya.`
+          : "Run \u201Csudo apt upgrade\u201D in a terminal, then restart Amaya.",
+        actions: [{ label: "Restart Amaya", kind: "primary", run: restart }],
+        closable: true,
+      };
+    }
     if (s?.phase === "ready") {
       let text;
       if (s.type === "deb") {
@@ -650,7 +757,7 @@
       return {
         kind: "available",
         title: `Amaya ${m.version} is ready`,
-        text: `You have ${current}.`,
+        text: installType() === "apt" ? "Install it with Software Updater." : `You have ${current}.`,
         actions: [
           { label: "Update", kind: "primary", run: startUpdate },
           { label: "Later", kind: "quiet", run: () => later(m.version) },
@@ -945,10 +1052,13 @@
       const firstIn = Math.max(1000, start + FIRST_DELAY_MS + 1000 - Date.now());
       timers.push(setTimeout(tick, firstIn));
       timers.push(setInterval(tick, TICK_MS));
+      window.addEventListener("activate", onActivate);
+      refreshApt().catch(e => log(`apt source: ${e}`));
     },
 
     uninit() {
       destroyed = true;
+      window.removeEventListener("activate", onActivate);
       for (const t of timers.splice(0)) {
         clearTimeout(t);
         clearInterval(t);
@@ -995,6 +1105,7 @@
       return { state, available: available()?.version || null, current, shown: viewModel()?.kind || null, installType: installType(), lastNotes };
     },
     checkDue: now => checkDue(now),
+    focusDue: now => focusDue(now),
     compareVersions,
     parseSums,
   };
