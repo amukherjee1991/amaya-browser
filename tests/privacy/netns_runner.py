@@ -272,7 +272,66 @@ def request_quit(proc, use_marionette, log):
     return "sigterm"
 
 
+def run_session(cfg, log, scenario, cmd, env, scen_dir, use_marionette, sess, stage):
+    """Launch once, idle for the duration, quit, capture shutdown; fills ``sess``."""
+    logf = open(os.path.join(scen_dir, "browser.log"), "ab")
+    progress("scenario %s (%s): launching %s for %ss"
+             % (scenario, stage, cfg["binary"], cfg["duration"]))
+    log.set_stage(stage)
+    proc = subprocess.Popen(cmd, env=env, stdout=logf, stderr=subprocess.STDOUT,
+                            cwd=scen_dir, start_new_session=True)
+    sess["pid"] = proc.pid
+    driver = None
+    if scenario == "newtab":
+        import threading
+        driver = threading.Thread(target=drive_newtab,
+                                  args=(log, cfg["duration"], sess), daemon=True)
+        driver.start()
+    start = time.monotonic()
+    snap_at = min(30, cfg["duration"] / 2)
+    exited_early = None
+    while time.monotonic() - start < cfg["duration"]:
+        if proc.poll() is not None:
+            exited_early = round(time.monotonic() - start, 1)
+            break
+        if "sandbox" not in sess and time.monotonic() - start >= snap_at:
+            sess["sandbox"] = sandbox_snapshot(proc.pid)
+        time.sleep(0.5)
+    sess["alive_at_end"] = exited_early is None
+    sess["clean_exit"] = False
+    if exited_early is not None:
+        sess["exited_after_s"] = exited_early
+        sess["exit_code"] = proc.returncode
+        progress("browser exited early after %ss (code %s)" % (exited_early, proc.returncode))
+    log.set_stage(stage + "-shutdown" if stage != "run" else "shutdown")
+    if proc.poll() is None:
+        progress("scenario %s (%s): idle period over, shutting down (grace %ss)"
+                 % (scenario, stage, cfg["shutdown_grace"]))
+        if driver:
+            driver.join(timeout=30)  # Marionette serves one client at a time
+        sess["quit_via"] = request_quit(proc, use_marionette, log)
+        try:
+            proc.wait(timeout=max(cfg["shutdown_grace"], 30))
+            sess["clean_exit"] = sess["quit_via"] == "marionette"
+        except subprocess.TimeoutExpired:
+            proc.send_signal(signal.SIGTERM)
+        # pingsender and friends may outlive the parent; give them the grace too.
+        end = time.monotonic() + cfg["shutdown_grace"]
+        while time.monotonic() < end and list_ns_processes():
+            reap()
+            time.sleep(0.5)
+    kill_all(signal.SIGKILL)
+    time.sleep(0.5)
+    reap()
+    if driver:
+        driver.join(timeout=1)
+    logf.close()
+
+
 def run_scenario(cfg, log, scenario, proxy_port):
+    """idle / newtab: one session on a fresh profile.  restart: the same fresh
+    profile launched twice -- the first session queues pings (e.g. telemetry
+    waits for the data-policy notice) that only go out on the next launch."""
     scen_dir = os.path.join(cfg["workdir"], scenario)
     profile = os.path.join(scen_dir, "profile")
     os.makedirs(profile, mode=0o700)
@@ -286,58 +345,26 @@ def run_scenario(cfg, log, scenario, proxy_port):
         argv.append("-marionette")
     cmd = [sys.executable, os.path.join(HERE, "dropuser.py"),
            str(cfg["uid"]), str(cfg["gid"]), "--"] + argv
-    status = {"name": scenario, "argv": argv, "duration_s": cfg["duration"]}
-    logf = open(os.path.join(scen_dir, "browser.log"), "wb")
-    progress("scenario %s: launching %s for %ss" % (scenario, cfg["binary"], cfg["duration"]))
+    status = {"name": scenario, "argv": argv, "duration_s": cfg["duration"], "sessions": []}
     log.start_clock(scenario)
-    proc = subprocess.Popen(cmd, env=env, stdout=logf, stderr=subprocess.STDOUT,
-                            cwd=scen_dir, start_new_session=True)
-    status["pid"] = proc.pid
-    driver = None
-    if scenario == "newtab":
-        import threading
-        driver = threading.Thread(target=drive_newtab,
-                                  args=(log, cfg["duration"], status), daemon=True)
-        driver.start()
-    start = time.monotonic()
-    snap_at = min(30, cfg["duration"] / 2)
-    exited_early = None
-    while time.monotonic() - start < cfg["duration"]:
-        if proc.poll() is not None:
-            exited_early = round(time.monotonic() - start, 1)
+    stages = ["run", "relaunch"] if scenario == "restart" else ["run"]
+    for stage in stages:
+        sess = {"stage": stage}
+        status["sessions"].append(sess)
+        run_session(cfg, log, scenario, cmd, env, scen_dir, use_marionette, sess, stage)
+        if not sess["alive_at_end"]:
             break
-        if "sandbox" not in status and time.monotonic() - start >= snap_at:
-            status["sandbox"] = sandbox_snapshot(proc.pid)
-        time.sleep(0.5)
-    status["alive_at_end"] = exited_early is None
-    if exited_early is not None:
-        status["exited_after_s"] = exited_early
-        status["exit_code"] = proc.returncode
-        progress("browser exited early after %ss (code %s)" % (exited_early, proc.returncode))
-    log.set_stage("shutdown")
-    if proc.poll() is None:
-        progress("scenario %s: idle period over, shutting down (grace %ss)"
-                 % (scenario, cfg["shutdown_grace"]))
-        if driver:
-            driver.join(timeout=30)  # Marionette serves one client at a time
-        status["quit_via"] = request_quit(proc, use_marionette, log)
-        try:
-            proc.wait(timeout=max(cfg["shutdown_grace"], 30))
-            status["clean_exit"] = status["quit_via"] == "marionette"
-        except subprocess.TimeoutExpired:
-            status["clean_exit"] = False
-            proc.send_signal(signal.SIGTERM)
-        # pingsender and friends may outlive the parent; give them the grace too.
-        end = time.monotonic() + cfg["shutdown_grace"]
-        while time.monotonic() < end and list_ns_processes():
-            reap()
-            time.sleep(0.5)
-    kill_all(signal.SIGKILL)
-    time.sleep(0.5)
-    reap()
-    if driver:
-        driver.join(timeout=1)
-    logf.close()
+    first = status["sessions"][0]
+    for k in ("sandbox", "actions", "exited_after_s", "exit_code"):
+        if k in first:
+            status[k] = first[k]
+    errs = [s["error"] for s in status["sessions"] if s.get("error")]
+    if errs:
+        status["error"] = "; ".join(errs)
+    status["alive_at_end"] = all(s["alive_at_end"] for s in status["sessions"]) and \
+        len(status["sessions"]) == len(stages)
+    status["clean_exit"] = all(s["clean_exit"] for s in status["sessions"])
+    status["quit_via"] = ",".join(s.get("quit_via", "-") for s in status["sessions"])
     status["profile_created"] = os.path.exists(os.path.join(profile, "compatibility.ini"))
     return status
 

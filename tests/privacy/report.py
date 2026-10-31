@@ -142,7 +142,7 @@ def render_text(report):
         for d in report["destinations"]:
             fs = d["first_seen"]
             when = "%s+%.1fs%s" % (fs["scenario"] or "", fs["t"],
-                                   " (shutdown)" if fs["stage"] == "shutdown" else "")
+                                   " (%s)" % fs["stage"] if fs["stage"] not in ("run", None) else "")
             rule = ""
             if d["matched_entry"]:
                 rule = "#%d %s" % (d["matched_entry"]["index"], d["matched_entry"]["host"])

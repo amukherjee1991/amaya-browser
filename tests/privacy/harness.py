@@ -23,7 +23,7 @@ from events import read_jsonl  # noqa: E402
 import report as reportmod  # noqa: E402
 
 EXIT_PASS, EXIT_FAIL, EXIT_ERROR = 0, 1, 2
-SCENARIOS = ("idle", "newtab")
+SCENARIOS = ("idle", "newtab", "restart")
 
 
 class HarnessError(Exception):
@@ -42,8 +42,9 @@ def parse_args(argv):
     p.add_argument("--allowlist", default=os.path.join(HERE, "allowlist.json"))
     p.add_argument("--report", help="write the JSON report here (text goes next to it as .txt)")
     p.add_argument("--scenario", default="idle",
-                   help="comma list of: idle, newtab, all (default idle); each scenario "
-                        "gets its own fresh profile")
+                   help="comma list of: idle, newtab, restart, all (default idle); each "
+                        "scenario gets its own fresh profile; restart launches that "
+                        "profile twice (2 x duration)")
     p.add_argument("--headful", action="store_true", help="show the browser window (debugging)")
     p.add_argument("--shutdown-grace", type=int, default=15,
                    help="seconds to keep capturing after SIGTERM (default 15)")
@@ -145,7 +146,8 @@ def run(args):
     cmd = ["unshare", "--user", "--map-root-user", "--net", "--mount", "--pid",
            "--fork", "--mount-proc", "--kill-child", "--",
            sys.executable, os.path.join(HERE, "netns_runner.py"), cfg_path]
-    budget = len(args.scenarios) * (args.duration + 2 * args.shutdown_grace + 150)
+    sessions = len(args.scenarios) + args.scenarios.count("restart")
+    budget = sessions * (args.duration + 2 * args.shutdown_grace + 150)
     sys.stderr.write("[harness] workdir %s; scenarios %s x %ss\n"
                      % (workdir, ",".join(args.scenarios), args.duration))
     try:

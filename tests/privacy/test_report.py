@@ -113,7 +113,7 @@ class HarnessArgsTest(unittest.TestCase):
 
     def test_scenarios(self):
         self.assertEqual(harness.parse_args(["b", "--scenario", "all"]).scenarios,
-                         ["idle", "newtab"])
+                         ["idle", "newtab", "restart"])
         self.assertEqual(harness.parse_args(["b", "--scenario", "newtab,idle"]).scenarios,
                          ["newtab", "idle"])
 
