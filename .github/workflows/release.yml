@@ -60,6 +60,12 @@ jobs:
           sudo docker image prune -af >/dev/null || true
           sudo mkdir -p "$AMAYA_WORKDIR" && sudo chown "$USER" "$AMAYA_WORKDIR"
           df -h / /mnt
+          # Gecko's largest compile units plus the Rust crates outgrow the
+          # runner's 16 GB of RAM; add swap so the build is not OOM-killed.
+          sudo swapoff -a || true
+          sudo fallocate -l 16G /swapfile && sudo chmod 600 /swapfile
+          sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+          free -h
 
       - name: Install system packages
         run: |
@@ -90,6 +96,8 @@ jobs:
         run: tools/amaya import
 
       - name: Build
+        env:
+          MOZ_PARALLEL_BUILD: "3"   # 4 jobs on 4 cores runs out of memory
         run: |
           export PATH="$HOME/.cargo/bin:$PATH"
           tools/amaya build
