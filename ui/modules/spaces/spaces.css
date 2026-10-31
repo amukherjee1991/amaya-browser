@@ -1,0 +1,412 @@
+/* Amaya spaces: switcher row, overflow menu and edit-space card.
+ * Every value comes from tokens.css (--amaya-*). Styles are scoped to this
+ * module's own elements so they cannot leak into other modules. */
+
+/* ---- switcher row ---- */
+#amaya-spaces {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: var(--amaya-space-1);
+  min-width: 0;
+  font: 500 12px/16px var(--amaya-font-ui);
+  color: var(--amaya-ink-muted);
+}
+/* In the sidebar footer the row fits its width; extra spaces go to the overflow menu. */
+#amaya-spaces.is-fit {
+  justify-content: safe center;
+  width: 100%;
+  padding: var(--amaya-space-1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+#amaya-spaces-toolbaritem {
+  -moz-box-align: center;
+  align-items: center;
+  margin-inline: var(--amaya-space-1);
+}
+#amaya-spaces .amaya-space,
+#amaya-spaces .amaya-iconbtn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  height: 28px;
+  min-width: 28px;
+  margin: 0;
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--amaya-radius-pill);
+  background: transparent;
+  color: var(--amaya-ink-muted);
+  font: inherit;
+  cursor: default;
+}
+#amaya-spaces .amaya-iconbtn {
+  justify-content: center;
+  padding: 0;
+  border-radius: var(--amaya-radius-sm);
+}
+#amaya-spaces .amaya-space:hover,
+#amaya-spaces .amaya-iconbtn:hover {
+  background: var(--amaya-surface-page);
+  color: var(--amaya-ink);
+}
+#amaya-spaces .amaya-space.is-active {
+  min-width: 0;
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  box-shadow: var(--amaya-shadow-tab);
+}
+#amaya-spaces .amaya-space__name {
+  min-width: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#amaya-spaces .amaya-spaces__count {
+  font: 500 11.5px/14px var(--amaya-font-ui);
+}
+.amaya-space__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--c);
+}
+#amaya-spaces .amaya-ico,
+.amaya-spaces-card .amaya-ico {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+/* ---- focus rings (every interactive element) ---- */
+#amaya-spaces button:focus-visible,
+.amaya-spaces-card button:focus-visible,
+.amaya-spaces-card input:focus-visible,
+.amaya-spaces-menu button:focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- popovers ---- */
+.amaya-spaces-card,
+.amaya-spaces-menu {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+  box-sizing: border-box;
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-lg);
+  background: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-popover);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card *,
+.amaya-spaces-menu * {
+  box-sizing: border-box;
+}
+
+.amaya-spaces-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--amaya-space-1);
+}
+.amaya-spaces-menu__item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-2);
+  height: var(--amaya-layout-row);
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 0;
+  border-radius: var(--amaya-radius-md);
+  background: transparent;
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+  text-align: start;
+}
+.amaya-spaces-menu__item:hover,
+.amaya-spaces-menu__item:focus-visible {
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-spaces-menu__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.amaya-spaces-menu .amaya-kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid var(--amaya-border-strong);
+  color: var(--amaya-ink-muted);
+  font: 500 11.5px/14px var(--amaya-font-mono);
+}
+
+/* ---- the edit-space card (components/SpaceSwitcher) ---- */
+.amaya-spaces-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-3);
+  width: 300px;
+  max-height: calc(100vh - 2 * var(--amaya-space-2));
+  overflow: auto;
+  padding: var(--amaya-space-4);
+}
+.amaya-spaces-card .amaya-title {
+  font: 600 15px/22px var(--amaya-font-ui);
+}
+.amaya-spaces-card .amaya-label {
+  display: block;
+  color: var(--amaya-ink-muted);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.amaya-spaces-card .amaya-sub {
+  color: var(--amaya-ink-muted);
+  font: 400 12px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card .amaya-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--amaya-space-3);
+}
+.amaya-spaces-card .amaya-field {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card .amaya-field::placeholder {
+  color: var(--amaya-ink-subtle);
+  opacity: 1;
+}
+.amaya-spaces-card .amaya-swatches {
+  display: flex;
+  gap: var(--amaya-space-2);
+  padding: 2px;
+}
+.amaya-spaces-card .amaya-swatch {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--c);
+}
+.amaya-spaces-card .amaya-swatch.is-on {
+  outline: 2px solid var(--amaya-ink);
+  outline-offset: 2px;
+}
+.amaya-spaces-card .amaya-swatch.is-on:focus-visible {
+  outline-color: var(--amaya-focus-ring);
+}
+
+/* Toggle (components/Toggle) */
+.amaya-spaces-card .amaya-toggle {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-surface-sunken);
+  border: 1px solid var(--amaya-border-strong);
+}
+.amaya-spaces-card .amaya-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amaya-border-strong);
+}
+.amaya-spaces-card .amaya-toggle[aria-checked="true"] {
+  background: var(--amaya-brand);
+  border-color: var(--amaya-brand);
+}
+.amaya-spaces-card .amaya-toggle[aria-checked="true"]::after {
+  transform: translateX(16px);
+  background: var(--amaya-on-brand);
+}
+.amaya-spaces-card .amaya-toggle[disabled] {
+  opacity: 0.5;
+}
+
+/* Segmented control (SOCKS / HTTP) */
+.amaya-spaces-card__proxy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--amaya-space-2);
+}
+.amaya-spaces-card__proxy[hidden] {
+  display: none;
+}
+.amaya-spaces-card__proxy .amaya-field {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  font-family: var(--amaya-font-mono);
+}
+.amaya-spaces-card__note {
+  flex-basis: 100%;
+}
+.amaya-spaces-card .amaya-segment {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-sunken);
+}
+.amaya-spaces-card .amaya-segment button {
+  appearance: none;
+  height: 26px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--amaya-ink-muted);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card .amaya-segment .is-on {
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  box-shadow: var(--amaya-shadow-tab);
+}
+
+/* Buttons (components/Button) */
+.amaya-spaces-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--amaya-space-2);
+  padding-top: var(--amaya-space-1);
+  border-top: 1px solid var(--amaya-border-subtle);
+}
+.amaya-spaces-card__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-2);
+}
+.amaya-spaces-card__warn {
+  color: var(--amaya-ink);
+}
+.amaya-spaces-card .amaya-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  height: 32px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  font: 500 12px/16px var(--amaya-font-ui);
+}
+.amaya-spaces-card .amaya-btn:hover {
+  background: var(--amaya-surface-sunken);
+}
+.amaya-spaces-card .amaya-btn--primary {
+  background: var(--amaya-brand);
+  border-color: var(--amaya-brand);
+  color: var(--amaya-on-brand);
+}
+.amaya-spaces-card .amaya-btn--primary:hover {
+  background: var(--amaya-brand-hover);
+  border-color: var(--amaya-brand-hover);
+}
+.amaya-spaces-card .amaya-btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--amaya-brand);
+}
+.amaya-spaces-card .amaya-btn--quiet:hover {
+  background: var(--amaya-brand-soft);
+  color: var(--amaya-on-brand-soft);
+}
+.amaya-spaces-card .amaya-btn--danger {
+  color: var(--amaya-danger);
+}
+.amaya-spaces-card .amaya-btn--danger:hover {
+  background: var(--amaya-danger-soft);
+  color: var(--amaya-danger);
+}
+.amaya-spaces-card .amaya-btn--danger-solid {
+  background: var(--amaya-danger-soft);
+  border-color: var(--amaya-danger);
+  color: var(--amaya-danger);
+}
+.amaya-spaces-card .amaya-btn[disabled] {
+  opacity: 0.5;
+}
+.amaya-spaces-card .amaya-btn--danger:first-child {
+  margin-inline-end: auto;
+}
+
+/* ---- motion: 120ms hover/toggles, 180ms popovers; none for keyboard ---- */
+@media (prefers-reduced-motion: no-preference) {
+  #amaya-spaces .amaya-space,
+  #amaya-spaces .amaya-iconbtn,
+  .amaya-spaces-menu__item,
+  .amaya-spaces-card .amaya-btn {
+    transition: background-color var(--amaya-dur-hover) var(--amaya-ease-out),
+      color var(--amaya-dur-hover) var(--amaya-ease-out);
+  }
+  .amaya-spaces-card .amaya-toggle::after {
+    transition: transform var(--amaya-dur-hover) var(--amaya-ease-out);
+  }
+  /* Keyboard switches re-render the row without the hover transition. */
+  #amaya-spaces .amaya-space.is-active {
+    transition: none;
+  }
+  .amaya-spaces-card.amaya-anim,
+  .amaya-spaces-menu.amaya-anim {
+    animation: amaya-spaces-pop var(--amaya-dur-popover) var(--amaya-ease-out);
+  }
+  @keyframes amaya-spaces-pop {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
