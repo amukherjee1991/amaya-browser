@@ -9,7 +9,16 @@
 /* Design tokens mapped onto Gecko's chrome variables                 */
 /* ------------------------------------------------------------------ */
 
-:root[amaya-shell] {
+/* Firefox themes (lightweight themes from addons.mozilla.org): Amaya's
+ * tokens stay authoritative. A theme writes its colours as inline custom
+ * properties on the root element, which beat any stylesheet rule there, so
+ * the mapping is declared again on <body>: nothing in the window inherits
+ * the theme's colours. What a theme still changes is light or dark: Firefox
+ * derives the chrome's prefers-color-scheme from the theme, and tokens.css
+ * follows it. So a theme can never pair its text colour with an Amaya
+ * background (unreadable text). */
+:root[amaya-shell],
+:root[amaya-shell] > body {
   --amaya-shell-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --amaya-shell-duration: 200ms;
   --amaya-shell-inset: var(--amaya-layout-pane-gap);
@@ -72,6 +81,26 @@
   --tab-icon-fill-loading: var(--amaya-brand);
   --tab-attention-dot-color: var(--amaya-brand);
   --tab-hover-preview-background-color: var(--amaya-surface-raised);
+
+  /* Set only by themes; mapped so a theme cannot recolour them. */
+  --tab-text-color-selected: var(--amaya-ink);
+  --toolbarbutton-icon-fill-attention: var(--amaya-brand);
+  --toolbarbutton-background-color-hover: var(--amaya-surface-page);
+  --toolbarbutton-background-color-active: var(--amaya-surface-sunken);
+  --toolbarseparator-color: var(--amaya-border-subtle);
+  --tabs-navbar-separator-color: var(--amaya-border-subtle);
+  --urlbarview-background-color-selected: var(--amaya-brand-soft);
+  --urlbarview-text-color-selected: var(--amaya-on-brand-soft);
+  --lwt-toolbar-field-highlight: var(--amaya-brand-soft);
+  --lwt-toolbar-field-highlight-text: var(--amaya-on-brand-soft);
+  --lwt-tab-line-color: var(--amaya-brand);
+  --lwt-background-tab-separator-color: var(--amaya-border-subtle);
+  --lwt-accent-color: var(--amaya-surface-window);
+  --lwt-text-color: var(--amaya-ink);
+  --lwt-header-image: none;
+  --lwt-additional-images: none;
+  --newtab-background-color: var(--amaya-surface-page);
+  --newtab-text-primary-color: var(--amaya-ink);
 }
 
 /* Menus, panels and popovers */
@@ -129,8 +158,8 @@
 }
 
 /* The tab strip and the top bar are replaced by the sidebar. The nav-bar is
- * collapsed by shell.js (so extension buttons overflow into the extensions
- * panel); this keeps it out of the way even before that runs. */
+ * not collapsed, only not displayed: pinned extension buttons in it are
+ * shown in the sidebar top row by the extensions module. */
 :root[amaya-shell] #TabsToolbar,
 :root[amaya-shell] #nav-bar {
   display: none;
@@ -303,21 +332,6 @@
   .toolbarbutton-text {
     display: none;
   }
-}
-
-/* The extensions button only anchors the extensions panel; the menu opens it.
- * It stays in the layout (a popup needs a frame to anchor to) at zero size,
- * right where the menu button is. */
-#amaya-sidebar-top #unified-extensions-button {
-  appearance: none;
-  visibility: hidden;
-  width: 0;
-  min-width: 0;
-  height: 28px;
-  margin: 0 0 0 calc(-1 * var(--amaya-space-1));
-  padding: 0;
-  border: 0;
-  overflow: hidden;
 }
 
 #amaya-sidebar-top .titlebar-buttonbox-container {
