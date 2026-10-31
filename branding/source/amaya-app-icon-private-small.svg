@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Amaya private-browsing icon, small-size master (16-32 px). -->
+  <defs>
+    <linearGradient id="amaya-pb-small-tile" x1="8" y1="8" x2="248" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9667AB"/><stop offset="1" stop-color="#7D5291"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#amaya-pb-small-tile)"/>
+  <g transform="translate(35.84 35.84) scale(0.72)">
+  <path fill="#FFFFFF" d="M79.04 222.7L151.04 51.7A25 25 0 0 0 104.96 32.3L32.96 203.3A25 25 0 0 0 79.04 222.7ZM104.96 51.7L176.96 222.7A25 25 0 0 0 223.04 203.3L151.04 32.3A25 25 0 0 0 104.96 51.7Z"/>
+  </g>
+</svg>

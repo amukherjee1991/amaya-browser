@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Amaya private-browsing icon: plum tile with the gradient mark. -->
+  <defs>
+    <linearGradient id="amaya-pb-tile" x1="8" y1="8" x2="248" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9667AB"/><stop offset="1" stop-color="#7D5291"/></linearGradient>
+    <linearGradient id="amaya-pb-l" x1="60" y1="212.5" x2="128" y2="43.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2BB0C6"/><stop offset="1" stop-color="#3DD0C6"/></linearGradient>
+    <linearGradient id="amaya-pb-r" x1="128" y1="43.5" x2="196" y2="212.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3DD0C6"/><stop offset="0.4" stop-color="#2CAEC5"/><stop offset="1" stop-color="#F2A65A"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#amaya-pb-tile)"/>
+  <g transform="translate(56.32 56.32) scale(0.56)">
+  <path fill="url(#amaya-pb-r)" d="M107.59 51.71L175.59 220.71A22 22 0 0 0 216.41 204.29L148.41 35.29A22 22 0 0 0 107.59 51.71Z"/>
+  <path fill="url(#amaya-pb-l)" d="M80.41 220.71L148.41 51.71A22 22 0 0 0 107.59 35.29L39.59 204.29A22 22 0 0 0 80.41 220.71Z"/>
+  </g>
+</svg>
