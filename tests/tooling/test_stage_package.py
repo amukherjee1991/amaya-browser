@@ -165,3 +165,38 @@ class PackageTests(ToolTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EngineTests(PackageTests):
+    def test_engine_key_tracks_compiled_inputs_only(self):
+        key = commands.engine_key(self.ctx())
+        self.assertTrue(key.startswith("1.0-linux-x86_64-"))
+        # amaya_revision, settings and ui/ are staged, not compiled.
+        data = json.loads((self.repo / "upstream.json").read_text())
+        data["amaya_revision"] = 7
+        (self.repo / "upstream.json").write_text(json.dumps(data))
+        (self.repo / "settings").mkdir(exist_ok=True)
+        (self.repo / "settings" / "amaya.cfg").write_text("// changed\n")
+        (self.repo / "ui").mkdir(exist_ok=True)
+        (self.repo / "ui" / "loader.js").write_text("// ui\n")
+        self.assertEqual(commands.engine_key(self.ctx()), key)
+        # A patch or a mozconfig change needs a new engine.
+        (self.repo / "patches").mkdir(exist_ok=True)
+        (self.repo / "patches" / "0001-x.patch").write_text("Reason: r\nOwner: o\n")
+        key2 = commands.engine_key(self.ctx())
+        self.assertNotEqual(key2, key)
+        (self.repo / "configs" / "mozconfig.common").write_text("# changed\n")
+        self.assertNotEqual(commands.engine_key(self.ctx()), key2)
+
+    def test_package_with_prebuilt_engine_skips_mach(self):
+        archive = self.make_mach_package()
+        moved = self.tmp / "engine.tar.xz"
+        archive.rename(moved)
+        with quiet():
+            rc = commands.package_cmd(self.ctx(), engine=moved)
+        self.assertEqual(rc, 0)
+        self.assertTrue((self.repo / "dist" / "amaya-1.0-1.linux-x86_64.tar.xz").is_file())
+
+    def test_package_with_missing_engine_fails(self):
+        with self.assertRaises(commands.AmayaError):
+            commands.package_cmd(self.ctx(), engine=self.tmp / "nope.tar.xz")

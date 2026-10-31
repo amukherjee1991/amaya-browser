@@ -51,7 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("run", help="`mach run` (extra args are passed through)")
     s.add_argument("mach_args", nargs=argparse.REMAINDER)
 
-    sub.add_parser("package", help="`mach package`, stage, re-tar into dist/, build .deb")
+    s = sub.add_parser("package", help="`mach package`, stage, re-tar into dist/, build .deb")
+    s.add_argument("--engine", type=Path, help="reuse a prebuilt engine archive instead of compiling")
+    sub.add_parser("engine-key", help="print the key of the compiled engine the current tree needs")
 
     s = sub.add_parser("rebase", help="move to a new Firefox version and re-apply patches")
     s.add_argument("version", help="new Firefox version, e.g. 160.0")
@@ -89,7 +91,9 @@ def dispatch(args: argparse.Namespace, ctx: Context) -> int:
     elif c == "run":
         return commands.run_cmd(ctx, _strip_dashdash(args.mach_args))
     elif c == "package":
-        return commands.package_cmd(ctx)
+        return commands.package_cmd(ctx, args.engine)
+    elif c == "engine-key":
+        return commands.engine_key_cmd(ctx)
     elif c == "rebase":
         return commands.rebase_cmd(ctx, args.version)
     elif c == "status":

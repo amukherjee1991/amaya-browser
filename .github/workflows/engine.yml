@@ -1,0 +1,97 @@
+# Compiles the Gecko engine with Amaya's patches, build config and branding, and
+# stores it as a GitHub Release named engine-<key> for release.yml to reuse.
+# Slow (2-4 h on a GitHub runner), so it only runs when an input that needs a
+# compile changes; `tools/amaya engine-key` says which engine the tree needs.
+name: Engine build
+
+on:
+  push:
+    branches: [main]
+    paths: [upstream.json, "patches/**", "configs/**", "branding/amaya/**"]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild even if an engine for this key exists"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: engine-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux-x86_64:
+    # 22.04 keeps the .deb dependencies on pre-t64 library names (Debian 12 and later).
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    env:
+      AMAYA_WORKDIR: /mnt/amaya-build
+      MOZBUILD_STATE_PATH: /home/runner/.mozbuild
+      DISABLE_TELEMETRY: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Engine key
+        id: key
+        run: |
+          KEY=$(tools/amaya engine-key)
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          if [ "${{ inputs.force }}" != "true" ] && gh release view "engine-$KEY" >/dev/null 2>&1; then
+            echo "Engine $KEY already exists; nothing to build."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Free disk space and add swap
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo mkdir -p "$AMAYA_WORKDIR" && sudo chown "$USER" "$AMAYA_WORKDIR"
+          # Gecko's largest compile units plus the Rust crates outgrow 16 GB of RAM.
+          sudo swapoff -a || true
+          sudo fallocate -l 16G /swapfile && sudo chmod 600 /swapfile
+          sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+          df -h / && free -h
+
+      - name: Restore Mozilla toolchains
+        if: steps.key.outputs.exists != 'true'
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.mozbuild
+          key: mozbuild-${{ runner.os }}-${{ hashFiles('upstream.json') }}
+          restore-keys: mozbuild-${{ runner.os }}-
+
+      - name: Fetch, bootstrap and apply the Amaya layer
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          tools/amaya fetch
+          tools/amaya bootstrap
+          tools/amaya import
+
+      - name: Compile
+        if: steps.key.outputs.exists != 'true'
+        env:
+          MOZ_PARALLEL_BUILD: "3"   # 4 jobs on 4 cores runs out of memory
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          tools/amaya build
+          (cd "$AMAYA_WORKDIR/engine" && MOZCONFIG="$PWD/mozconfig" ./mach package)
+
+      - name: Publish the engine
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          KEY="${{ steps.key.outputs.key }}"
+          ARCHIVE=$(ls "$AMAYA_WORKDIR"/obj-amaya-linux-x86_64/dist/amaya-*.en-US.linux-x86_64.tar.xz)
+          cp "$ARCHIVE" "engine-$KEY.tar.xz"
+          sha256sum "engine-$KEY.tar.xz" > "engine-$KEY.tar.xz.sha256"
+          gh release delete "engine-$KEY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "engine-$KEY" "engine-$KEY.tar.xz" "engine-$KEY.tar.xz.sha256" \
+            --target "$GITHUB_SHA" --prerelease --title "Engine $KEY" \
+            --notes "Compiled Gecko engine for Amaya, built by GitHub Actions from commit $GITHUB_SHA ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})). Not a user download: release.yml stages settings, extensions and the UI into it."

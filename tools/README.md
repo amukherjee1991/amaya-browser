@@ -69,3 +69,12 @@ workflow (`.github/workflows/firefox-release-watch.yml`) runs it every 6 hours
 and opens one `upstream-release` issue per new Firefox version, with release
 notes, security advisories, the `tools/amaya rebase <version>` steps and a
 checklist. Run it by hand from the Actions tab ("Run workflow").
+
+## Fast releases: prebuilt engine
+
+Only `upstream.json` (minus `amaya_revision`), `patches/`, `configs/` and
+`branding/amaya/` need a Gecko compile. `tools/amaya engine-key` fingerprints
+them; the **Engine build** workflow compiles once per key (2-4 h) and stores the
+result as the GitHub Release `engine-<key>`. The **Release** workflow (on `v*`
+tags) downloads that engine and runs `tools/amaya package --engine <archive>`,
+which stages settings, extensions and `ui/` into it — about 15 minutes.

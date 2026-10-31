@@ -108,10 +108,42 @@ def repackage(ctx: Context, mach_archive: Path) -> tuple[Path, Path]:
     return appdir, out
 
 
-def package_cmd(ctx: Context) -> int:
-    require_mozconfig(ctx)
-    mach(ctx, "package")
-    appdir, _ = repackage(ctx, find_mach_package(ctx))
+# Inputs that need a full engine compile. Settings, policies, extensions and
+# the ui/ layer are staged into an existing engine, so they are not part of it.
+ENGINE_INPUTS = ("patches", "configs", "branding/amaya")
+
+
+def engine_key(ctx: Context) -> str:
+    """Fingerprint of everything baked into the compiled engine."""
+    import hashlib
+    h = hashlib.sha256()
+    up = json.loads(ctx.upstream_json.read_text())
+    up.pop("amaya_revision", None)  # a new Amaya revision alone does not need a compile
+    h.update(json.dumps(up, sort_keys=True).encode())
+    for rel in ENGINE_INPUTS:
+        root = ctx.repo / rel
+        for f in sorted(p for p in root.rglob("*") if p.is_file()) if root.exists() else []:
+            h.update(str(f.relative_to(ctx.repo)).encode() + b"\0")
+            h.update(f.read_bytes())
+    return f"{up['version']}-{ctx.platform}-{ctx.arch}-{h.hexdigest()[:12]}"
+
+
+def engine_key_cmd(ctx: Context) -> int:
+    print(engine_key(ctx))
+    return 0
+
+
+def package_cmd(ctx: Context, engine: Path | None = None) -> int:
+    """Package a release. With `engine`, reuse a prebuilt engine archive (the
+    output of `mach package`) instead of compiling: only settings, extensions
+    and the ui/ layer are staged into it."""
+    if engine is None:
+        require_mozconfig(ctx)
+        mach(ctx, "package")
+        engine = find_mach_package(ctx)
+    elif not engine.is_file():
+        raise AmayaError(f"engine archive not found: {engine}")
+    appdir, _ = repackage(ctx, engine)
     deb_script = ctx.repo / "packaging" / "debian" / "build-deb.sh"
     if ctx.platform == "linux" and deb_script.is_file():
         version = ctx.upstream().deb_version
