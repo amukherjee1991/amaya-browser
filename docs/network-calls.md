@@ -26,6 +26,7 @@ by a packet capture. Gate 1 should confirm or remove these.
 | `ciscobinary.openh264.org` | Download of the OpenH264 plug-in announced by the check above. | Once, after the first GMP check; then on codec updates. | As above. | ? |
 | `versioncheck.addons.mozilla.org`, `versioncheck-bg.addons.mozilla.org`, `services.addons.mozilla.org`, `addons.mozilla.org`, `addons.cdn.mozilla.net` | Update check for user extensions, including the bundled **uBlock Origin**; downloads the new XPI when there is one. Sends add-on IDs/versions, app version, locale. | Daily (`extensions.update.interval`); the first check is 24 h after the first start. | Policy `ExtensionUpdate: false` or per add-on in about:addons. Kept on: extension updates carry security fixes. | ✔ (host) / ? (first-check timing) |
 | uBlock Origin filter lists: `ublockorigin.github.io`, `ublockorigin.pages.dev`, `cdn.jsdelivr.net`, `cdn.statically.io`, `easylist.to`, `secure.fanboy.co.nz`, `pgl.yoyo.org`, `malware-filter.gitlab.io`, `malware-filter.pages.dev`, `curbengh.github.io`, `publicsuffix.org`, `raw.githubusercontent.com` | uBO refreshes its enabled filter lists (it ships packaged copies). Plain GET requests, no identifiers. | ~37 s after launch (`autoUpdateDelayAfterLaunch`) if any list is stale, then every few days per list. | uBO dashboard › Filter lists › "Auto-update filter lists". Kept on: stale lists = worse blocking. | ? (exact host set depends on which lists uBO considers stale) |
+| `amaya.arghyam.me` | **Amaya update check** (`ui/modules/update/`). A plain GET of the static `/downloads/latest.json` (version number and file names). Chrome `fetch` with `credentials: "omit"`, `cache: "no-store"`, `referrerPolicy: "no-referrer"` and no custom headers: no cookies, no IDs, no installed version in the request. Only when you press **Update** does it download the `.deb` or `.tar.xz` and `SHA256SUMS` from the same folder (user-initiated). | ~60 s after the app starts, then every 12 h while it runs (one check per session across windows, `amaya.update.lastCheck`); also from the command bar "Check for updates". Skipped while offline and in development runs without `amaya-ui/version.json`. | `amaya.update.enabled` = false (automatic checks off; "Check for updates" still works on demand). | ✔ |
 
 ## 2. User-initiated or opt-in only (must NOT appear while idle)
 
@@ -62,7 +63,7 @@ by a packet capture. Gate 1 should confirm or remove these.
 | `update.googleapis.com` | Widevine DRM plugin download (Google component updater) | `media.gmp-widevinecdm.enabled` follows `media.eme.enabled` (off until the person enables DRM). Found by the Gate 1 test on 2026-10-30. |
 | `archive.mozilla.org/pub/system-addons/` | New-tab "train-hop" add-on updates (Nimbus-driven) | Nimbus off; `browser.newtabpage.trainhopAddon.xpiBaseURL` = "". |
 | `aus5.mozilla.org` (system add-ons) | System add-on updates | `DisableSystemAddonUpdate` policy; `extensions.systemAddon.update.enabled` = false. |
-| `aus5.mozilla.org` (app update) | Application updates (Linux) | Updater compiled out on Linux (`--disable-updater`); apt provides updates. macOS (Phase M) will contact an Amaya update manifest instead. |
+| `aus5.mozilla.org` (app update) | Application updates (Linux) | Updater compiled out on Linux (`--disable-updater`). Amaya's own check of `amaya.arghyam.me` (§1) offers new releases instead. macOS (Phase M) will contact an Amaya update manifest instead. |
 | `accounts.firefox.com`, `token.services.mozilla.com`, `sync-*.services.mozilla.com` | Mozilla accounts / Sync | `identity.fxaccounts.enabled` = false + `DisableAccounts` policy (until Phase 3). |
 | `discovery.addons.mozilla.org` | about:addons recommendations | `extensions.getAddons.showPane` = false, recommendations off. |
 | `fpn.firefox.com` / IP Protection | Built-in VPN | Policy `IPProtectionAvailable: false`. |
@@ -129,7 +130,8 @@ Hosts the idle test must tolerate. `optional: true` = may or may not appear.
     {"host": "malware-filter.pages.dev", "purpose": "uBO filter lists", "optional": true},
     {"host": "curbengh.github.io", "purpose": "uBO filter lists", "optional": true},
     {"host": "publicsuffix.org", "purpose": "uBO public suffix list", "optional": true},
-    {"host": "raw.githubusercontent.com", "purpose": "uBO filter lists", "optional": true}
+    {"host": "raw.githubusercontent.com", "purpose": "uBO filter lists", "optional": true},
+    {"host": "amaya.arghyam.me", "purpose": "Amaya update check: static latest.json, no identifiers", "optional": true}
   ],
   "deny": [
     "incoming.telemetry.mozilla.org", "dap-09-3.api.divviup.org", "dap.services.mozilla.com",

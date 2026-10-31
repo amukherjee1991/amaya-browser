@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Mirror of the machine-readable block in docs/network-calls.md (section 6). Anything not matched by 'entries' fails the test. 'deny' only labels known phone-home hosts in the report and must never overlap 'entries'. Every entry stays provisional until Gate 1 captures confirm it; 'optional' = may or may not appear. Host wildcards: '*.' = exactly one DNS label, '**.' = any depth.",
+  "comment": "Mirror of the machine-readable block in docs/network-calls.md (section 6). Anything not matched by 'entries' fails the test. 'deny' only labels known phone-home hosts in the report and must never overlap 'entries'. Every third-party entry stays provisional until Gate 1 captures confirm it (Amaya's own update host is defined by our code, so it is not); 'optional' = may or may not appear. Host wildcards: '*.' = exactly one DNS label, '**.' = any depth.",
   "entries": [
     {
       "host": "firefox.settings.services.mozilla.com",
@@ -215,6 +215,15 @@
       "phase": "idle",
       "source": "docs/network-calls.md",
       "provisional": true
+    },
+    {
+      "host": "amaya.arghyam.me",
+      "port": 443,
+      "purpose": "Amaya update check: static latest.json, no identifiers",
+      "phase": "idle",
+      "optional": true,
+      "source": "docs/network-calls.md",
+      "provisional": false
     }
   ],
   "deny": [
