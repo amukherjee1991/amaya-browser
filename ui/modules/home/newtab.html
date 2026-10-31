@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+  Amaya new tab page (template).  Unprivileged: it runs as an ordinary
+  file:// page in a content process and makes no network requests (the CSP
+  below has no network source at all).  home.js copies this file into
+  <profile>/amaya/home/newtab.html, replacing the two markers: "amaya:base"
+  with a <base> pointing back at this folder (so newtab.css/.js and the font
+  resolve here), and "amaya:data" with the JSON the page renders (greeting
+  time zone, search engine, sites, weekly tally).  See home.js, "New tab page".
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src file:; style-src file:; img-src data:; font-src file: data:; base-uri file:; form-action 'none'">
+<!--amaya:base-->
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="viewport" content="width=device-width">
+<title>New tab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../tokens.css">
+<link rel="stylesheet" href="newtab.css">
+<script src="newtab.js" defer></script>
+</head>
+<body class="amaya-nt">
+<script type="application/json" id="amaya-home-data"><!--amaya:data--></script>
+<main class="amaya-nt-main">
+  <h1 class="amaya-nt-greeting" id="amaya-nt-greeting">Hello</h1>
+
+  <form class="amaya-nt-search" id="amaya-nt-search" role="search">
+    <svg class="amaya-nt-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+    <input class="amaya-nt-q" id="amaya-nt-q" type="text" autocomplete="off" spellcheck="false"
+           placeholder="Search or enter address" aria-label="Search or enter address">
+    <span class="amaya-nt-kbd" id="amaya-nt-kbd" aria-hidden="true" hidden></span>
+  </form>
+
+  <section class="amaya-nt-sites-wrap" id="amaya-nt-sites-wrap" aria-label="Your sites">
+    <ul class="amaya-nt-sites" id="amaya-nt-sites"></ul>
+    <p class="amaya-nt-empty" id="amaya-nt-empty" hidden>Sites you visit often show up here.</p>
+    <form class="amaya-nt-add" id="amaya-nt-add" hidden>
+      <label class="amaya-nt-add-field">
+        <span>Address</span>
+        <input id="amaya-nt-add-url" type="text" autocomplete="off" spellcheck="false" placeholder="example.org" required>
+      </label>
+      <label class="amaya-nt-add-field">
+        <span>Name (optional)</span>
+        <input id="amaya-nt-add-name" type="text" autocomplete="off">
+      </label>
+      <div class="amaya-nt-add-actions">
+        <button type="button" class="amaya-nt-btn" id="amaya-nt-add-cancel">Cancel</button>
+        <button type="submit" class="amaya-nt-btn amaya-nt-btn--primary">Add site</button>
+      </div>
+    </form>
+  </section>
+
+  <p class="amaya-nt-tally" id="amaya-nt-tally" hidden>
+    <svg class="amaya-nt-ico amaya-nt-shield" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>
+    <span id="amaya-nt-tally-text"></span>
+    <span aria-hidden="true">·</span>
+    <a href="about:protections">See privacy report</a>
+  </p>
+</main>
+</body>
+</html>
