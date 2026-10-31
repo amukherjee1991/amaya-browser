@@ -16,7 +16,7 @@ organisation), repo name `amaya-browser`.
 3. From the main checkout:
 
 ```sh
-cd "/home/arghya/Documents/Amaya Browser"
+cd path/to/amaya-browser
 git remote add origin ssh://git@<forgejo-host>/<owner>/amaya-browser.git
 #   (non-standard SSH port: ssh://git@<forgejo-host>:2222/<owner>/amaya-browser.git)
 git push -u origin --all     # every branch: main, feat/*, …
