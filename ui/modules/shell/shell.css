@@ -1,0 +1,993 @@
+/* Amaya shell: sidebar, address field in the sidebar, pinned tiles, tab rows,
+ * the web view card and compact mode, drawn over Gecko's own vertical tabs.
+ *
+ * Every rule is scoped to :root[amaya-shell], which shell.js sets on init and
+ * removes on uninit, so this sheet is inert unless the module is running.
+ * Values come from tokens.css (--amaya-*); no raw colours here. */
+
+/* ------------------------------------------------------------------ */
+/* Design tokens mapped onto Gecko's chrome variables                 */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell] {
+  --amaya-shell-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --amaya-shell-duration: 200ms;
+  --amaya-shell-inset: var(--amaya-layout-pane-gap);
+
+  /* Frame */
+  --toolbox-background-color: var(--amaya-surface-window);
+  --toolbox-background-color-inactive: var(--amaya-surface-window);
+  --toolbox-text-color: var(--amaya-ink);
+  --toolbox-text-color-inactive: var(--amaya-ink-muted);
+  --toolbar-background-color: var(--amaya-surface-window);
+  --toolbar-text-color: var(--amaya-ink);
+  --toolbarbutton-icon-fill: var(--amaya-ink-muted);
+  --sidebar-background-color: var(--amaya-surface-page);
+  --sidebar-text-color: var(--amaya-ink);
+  --sidebar-border-color: var(--amaya-border-subtle);
+  --chrome-content-separator-color: var(--amaya-border-subtle);
+  --tabpanel-background-color: var(--amaya-surface-page);
+
+  /* Address field */
+  --toolbar-field-background-color: var(--amaya-surface-sunken);
+  --toolbar-field-background-color-focus: var(--amaya-surface-raised);
+  --toolbar-field-text-color: var(--amaya-ink);
+  --toolbar-field-text-color-focus: var(--amaya-ink);
+  --toolbar-field-border-color: transparent;
+  --toolbar-field-border-color-focus: var(--amaya-focus-ring);
+  --urlbar-box-bgcolor: var(--amaya-surface-raised);
+  --urlbar-box-text-color: var(--amaya-ink);
+  --urlbar-box-hover-bgcolor: var(--amaya-surface-page);
+  --urlbar-box-active-bgcolor: var(--amaya-surface-sunken);
+  --urlbarView-highlight-background: var(--amaya-brand-soft);
+  --urlbarView-highlight-color: var(--amaya-on-brand-soft);
+  --urlbarView-hover-background: var(--amaya-surface-page);
+  --urlbarView-separator-color: var(--amaya-border-subtle);
+  --urlbarView-action-color: var(--amaya-ink-muted);
+  --urlbarView-url-color: var(--amaya-brand);
+
+  /* Focus, links, buttons */
+  --focus-outline-color: var(--amaya-focus-ring);
+  --focus-outline-width: 2px;
+  --focus-outline-offset: 2px;
+  --color-accent-primary: var(--amaya-brand);
+  --color-accent-primary-hover: var(--amaya-brand-hover);
+  --link-color: var(--amaya-brand);
+  --link-color-hover: var(--amaya-brand-hover);
+  --button-background-color-primary: var(--amaya-brand);
+  --button-background-color-primary-hover: var(--amaya-brand-hover);
+  --button-text-color-primary: var(--amaya-on-brand);
+
+  /* Tabs (the strip itself is restyled below) */
+  --tab-min-height: var(--amaya-layout-row);
+  --tab-border-radius: var(--amaya-radius-md);
+  --tab-background-color-selected: var(--amaya-surface-raised);
+  --tab-background-color-hover: var(--amaya-surface-page);
+  --tab-box-shadow-selected: var(--amaya-shadow-tab);
+  --tab-selected-textcolor: var(--amaya-ink);
+  --tab-text-color: var(--amaya-ink);
+  --tab-icon-fill-loading: var(--amaya-brand);
+  --tab-attention-dot-color: var(--amaya-brand);
+  --tab-hover-preview-background-color: var(--amaya-surface-raised);
+}
+
+/* Menus, panels and popovers */
+:root[amaya-shell] :is(menupopup, panel, .urlbarView, panel-list) {
+  --panel-background-color: var(--amaya-surface-raised);
+  --panel-text-color: var(--amaya-ink);
+  --panel-border-color: var(--amaya-border-subtle);
+  --panel-separator-color: var(--amaya-border-subtle);
+  --panel-item-hover-bgcolor: var(--amaya-surface-page);
+  --panel-item-active-bgcolor: var(--amaya-surface-sunken);
+  --panel-description-color: var(--amaya-ink-muted);
+  --panel-icon-fill: var(--amaya-ink-muted);
+  --arrowpanel-background: var(--amaya-surface-raised);
+  --arrowpanel-color: var(--amaya-ink);
+  --arrowpanel-border-color: var(--amaya-border-subtle);
+  --arrowpanel-dimmed: var(--amaya-surface-page);
+  --arrowpanel-dimmed-further: var(--amaya-surface-sunken);
+  --menuitem-hover-background-color: var(--amaya-surface-page);
+  --menu-background-color: var(--amaya-surface-raised);
+  --menu-color: var(--amaya-ink);
+  --menu-border-color: var(--amaya-border-subtle);
+  --background-color-box: var(--amaya-surface-raised);
+  --border-color-card: var(--amaya-border-subtle);
+  --text-color: var(--amaya-ink);
+  --text-color-deemphasized: var(--amaya-ink-muted);
+}
+
+:root[amaya-shell] :is(menupopup, panel):not([type="autocomplete-richlistbox"]) {
+  --panel-border-radius: var(--amaya-radius-lg);
+  --panel-shadow: var(--amaya-shadow-popover);
+}
+
+/* Every interactive element gets the same visible focus ring. */
+:root[amaya-shell] :is(#amaya-sidebar, #navigator-toolbox, #sidebar-box) :focus-visible:not(input, textarea, .urlbar-input) {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Window frame                                                        */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell],
+:root[amaya-shell] body,
+:root[amaya-shell] #browser {
+  background-color: var(--amaya-surface-window);
+  background-image: none;
+  color: var(--amaya-ink);
+}
+
+:root[amaya-shell] #navigator-toolbox {
+  background: var(--amaya-surface-window);
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+/* The tab strip and the top bar are replaced by the sidebar. The nav-bar is
+ * collapsed by shell.js (so extension buttons overflow into the extensions
+ * panel); this keeps it out of the way even before that runs. */
+:root[amaya-shell] #TabsToolbar,
+:root[amaya-shell] #nav-bar {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar column                                                      */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell] #sidebar-container {
+  background: var(--amaya-surface-window);
+  color: var(--amaya-ink);
+  border: 0;
+  box-shadow: none;
+  font: 400 13px/16px var(--amaya-font-ui);
+}
+
+:root[amaya-shell] #sidebar-container[sidebar-launcher-expanded] {
+  min-width: calc(200px + var(--amaya-shell-inset));
+  max-width: calc(400px + var(--amaya-shell-inset));
+}
+
+:root[amaya-shell]:not([sidebar-expand-on-hover]) #sidebar-container[sidebar-launcher-expanded]:not([style*="width"]) {
+  width: calc(var(--amaya-layout-sidebar) + var(--amaya-shell-inset));
+}
+
+:root[amaya-shell] #sidebar-launcher-splitter {
+  width: var(--amaya-shell-inset);
+  min-width: var(--amaya-shell-inset);
+  margin: 0;
+  border: 0;
+  background: transparent;
+  opacity: 1;
+}
+
+#amaya-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-2);
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: var(--amaya-shell-inset) 0 var(--amaya-shell-inset) var(--amaya-shell-inset);
+  background: var(--amaya-surface-window);
+  color: var(--amaya-ink);
+  font: 400 13px/16px var(--amaya-font-ui);
+}
+
+#amaya-sidebar :is(button, toolbarbutton) {
+  font: inherit;
+}
+
+/* Top row: collapse, back, forward, menu */
+#amaya-sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  min-height: 28px;
+  color: var(--amaya-ink-muted);
+  -moz-window-dragging: drag;
+}
+
+#amaya-sidebar-top > :is(button, toolbaritem, toolbarbutton, .titlebar-buttonbox-container) {
+  -moz-window-dragging: no-drag;
+}
+
+.amaya-shell-spacer {
+  flex: 1;
+  align-self: stretch;
+}
+
+.amaya-iconbtn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--amaya-radius-sm);
+  background: none;
+  color: var(--amaya-ink-muted);
+  appearance: none;
+}
+
+.amaya-iconbtn:hover:not(:disabled) {
+  background: var(--amaya-surface-page);
+  color: var(--amaya-ink);
+}
+
+.amaya-iconbtn:hover:active:not(:disabled) {
+  background: var(--amaya-surface-sunken);
+}
+
+.amaya-iconbtn:disabled {
+  opacity: 0.5;
+}
+
+.amaya-iconbtn:focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+#amaya-sidebar .amaya-ico {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+  pointer-events: none;
+}
+
+/* The app menu button, moved here from the nav-bar */
+#amaya-sidebar-top #PanelUI-button {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+#amaya-sidebar-top #PanelUI-menu-button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--amaya-radius-sm);
+  color: var(--amaya-ink-muted);
+
+  &:hover {
+    background: var(--amaya-surface-page);
+    color: var(--amaya-ink);
+  }
+
+  &[open] {
+    background: var(--amaya-surface-sunken);
+    color: var(--amaya-ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amaya-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .toolbarbutton-badge-stack {
+    padding: 0;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    background: none;
+  }
+
+  .toolbarbutton-icon {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    list-style-image: none;
+    background-color: currentColor;
+    mask: url("more.svg") center / 16px 16px no-repeat;
+  }
+
+  .toolbarbutton-text {
+    display: none;
+  }
+}
+
+/* The extensions button only anchors the extensions panel; the menu opens it.
+ * It stays in the layout (a popup needs a frame to anchor to) at zero size,
+ * right where the menu button is. */
+#amaya-sidebar-top #unified-extensions-button {
+  appearance: none;
+  visibility: hidden;
+  width: 0;
+  min-width: 0;
+  height: 28px;
+  margin: 0 0 0 calc(-1 * var(--amaya-space-1));
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+#amaya-sidebar-top .titlebar-buttonbox-container {
+  order: 0;
+}
+
+/* Address field slot (an inert XUL <toolbar>, so the urlbar keeps its
+ * top-layer results popover). */
+#amaya-urlbar-slot {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--amaya-space-1);
+  min-height: var(--amaya-layout-row);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--amaya-ink);
+  box-shadow: none;
+  --urlbar-height: var(--amaya-layout-row);
+  --urlbar-min-height: var(--amaya-layout-row);
+  --urlbar-container-height: var(--amaya-layout-row);
+  --urlbar-container-padding-block: 0px;
+  --urlbar-padding-block: 0px;
+  --urlbar-input-container-padding: 2px;
+  --urlbar-background-border-radius: var(--amaya-radius-md);
+  --urlbar-border-radius: var(--amaya-radius-md);
+  --urlbarview-border-radius: var(--amaya-radius-md);
+  --urlbar-background-color: var(--amaya-surface-sunken);
+  --urlbar-background-color-focus: var(--amaya-surface-raised);
+  --urlbar-background-box-shadow-open: var(--amaya-shadow-popover);
+}
+
+#amaya-urlbar-slot > #urlbar {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  height: var(--amaya-layout-row);
+  min-height: var(--amaya-layout-row);
+  font: 400 14px/20px var(--amaya-font-ui);
+  color: var(--amaya-ink);
+}
+
+#amaya-urlbar-slot > #urlbar .urlbar-background {
+  background-color: var(--amaya-surface-sunken);
+  border: 1px solid transparent;
+  border-radius: var(--amaya-radius-md);
+  box-shadow: none;
+}
+
+#amaya-urlbar-slot > #urlbar:is([focused], [open]) .urlbar-background {
+  background-color: var(--amaya-surface-raised);
+  border-color: var(--amaya-border-strong);
+}
+
+#amaya-urlbar-slot > #urlbar[focused]:not([suppress-focus-border]) .urlbar-background {
+  border-color: var(--amaya-focus-ring);
+  outline: 1px solid var(--amaya-focus-ring);
+  outline-offset: -1px;
+}
+
+#amaya-urlbar-slot > #urlbar .urlbar-input-container {
+  height: var(--amaya-layout-row);
+  padding-inline: var(--amaya-space-1) var(--amaya-space-2);
+  border-radius: var(--amaya-radius-md);
+  outline: none;
+}
+
+#amaya-urlbar-slot > #urlbar .urlbar-input {
+  font: 400 14px/20px var(--amaya-font-ui);
+  color: var(--amaya-ink);
+}
+
+#amaya-urlbar-slot > #urlbar .urlbar-input::placeholder {
+  color: var(--amaya-ink-subtle);
+  opacity: 1;
+}
+
+/* Keep the narrow field calm: page actions show while it is hovered or in use. */
+#amaya-urlbar-slot > #urlbar:not(:hover, [focused], [open]) #page-action-buttons > :not(#star-button-box[starred], #urlbar-zoom-button, #reader-mode-button[readeractive], #translations-button[translationsactive]) {
+  display: none;
+}
+
+#amaya-urlbar-slot > #urlbar:not([focused], [open]) .searchmode-switcher {
+  display: none;
+}
+
+/* Results: a command-bar style card under the field. It starts at the field's
+ * left edge and is wide enough to read, extending over the page. */
+#amaya-urlbar-slot > #urlbar[popover-open] > .urlbarView:popover-open {
+  position-area: block-end span-inline-end;
+  justify-self: start;
+  inset-inline: auto;
+  width: min(560px, 100vw - 2 * var(--amaya-space-4));
+  min-width: anchor-size(--urlbar-anchor width);
+  margin-block-start: var(--amaya-space-1);
+}
+
+#amaya-urlbar-slot > #urlbar,
+#amaya-urlbar-slot > #urlbar .urlbarView {
+  --urlbarview-background-color-selected: var(--amaya-brand-soft);
+  --urlbarview-text-color-selected: var(--amaya-on-brand-soft);
+  --urlbarview-background-color-hover: var(--amaya-surface-page);
+  --urlbarview-text-color-action: var(--amaya-ink-muted);
+}
+
+#amaya-urlbar-slot > #urlbar[popover-open] > .urlbarView > .urlbarView-background {
+  inset: 0;
+  clip-path: none;
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-lg);
+  background-color: var(--amaya-surface-raised);
+  box-shadow: var(--amaya-shadow-popover);
+}
+
+#amaya-urlbar-slot > #urlbar[popover-open] > .urlbar-background {
+  inset: 0;
+  clip-path: none;
+  border-radius: var(--amaya-radius-md);
+  box-shadow: none;
+}
+
+#amaya-urlbar-slot > #urlbar[popover-open] > .urlbar-input-container {
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--amaya-space-1) var(--amaya-space-2);
+  outline: none;
+}
+
+#amaya-urlbar-slot > #urlbar .urlbarView-row[selected] > .urlbarView-row-inner,
+#amaya-urlbar-slot > #urlbar .urlbarView-row:hover > .urlbarView-row-inner {
+  border-radius: var(--amaya-radius-md);
+}
+
+/* Pinned tiles position marker (the tiles are Gecko's pinned tab container) */
+#amaya-pins {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabs                                                                */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell] #amaya-sidebar #vertical-tabs {
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+:root[amaya-shell] #amaya-sidebar #tabbrowser-tabs[orient="vertical"] {
+  --tab-margin-inline-inner: 0px;
+  --tab-margin-block: 0px;
+  --tab-padding-block-start: 2px;
+  --tab-padding-block-end: 2px;
+  --tab-collapsed-background-width: var(--amaya-layout-row);
+  --tab-collapsed-width: var(--amaya-layout-row);
+  --tab-label-mask-size: 1em;
+  gap: var(--amaya-space-1);
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font: 500 13px/16px var(--amaya-font-ui);
+  color: var(--amaya-ink);
+
+  &::after {
+    display: none;
+  }
+
+  .tabbrowser-tab {
+    padding-block: var(--tab-padding-block-start) var(--tab-padding-block-end);
+    color: var(--amaya-ink);
+  }
+
+  .tabbrowser-tab:nth-child(1 of :not([hidden], [pinned])) {
+    padding-block-start: var(--tab-padding-block-start);
+  }
+
+  .tab-background {
+    min-height: var(--amaya-layout-row);
+    margin: 0;
+    border: 0;
+    border-radius: var(--amaya-radius-md);
+    background: transparent;
+    outline: none;
+    box-shadow: none;
+  }
+
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected], [multiselected]) {
+    background: var(--amaya-surface-page);
+  }
+
+  .tab-background:is([selected], [multiselected]) {
+    background: var(--amaya-surface-raised);
+    box-shadow: var(--amaya-shadow-tab);
+  }
+
+  .tab-background[multiselected]:not([selected]) {
+    outline: 1px solid var(--amaya-brand);
+    outline-offset: -1px;
+  }
+
+  .tab-context-line,
+  .tab-loading-burst {
+    display: none;
+  }
+
+  .tab-content {
+    padding-inline: 10px var(--amaya-space-1);
+    gap: var(--amaya-space-2);
+    min-height: var(--amaya-layout-row);
+  }
+
+  .tab-icon-stack {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tab-icon-image {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border-radius: 4px;
+  }
+
+  .tab-label-container {
+    margin: 0;
+    height: auto;
+  }
+
+  /* No favicon: neutral square with the first letter */
+  .tabbrowser-tab[amaya-letter-icon]:not([busy]) .tab-icon-image {
+    display: none;
+  }
+
+  .tabbrowser-tab[amaya-letter-icon]:not([busy]) .tab-icon-stack::before {
+    content: attr(amaya-letter);
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--amaya-surface-sunken);
+    color: var(--amaya-ink-muted);
+    font: 600 10px/1 var(--amaya-font-ui);
+  }
+
+  .tabbrowser-tab[amaya-letter-icon][selected]:not([busy]) .tab-icon-stack::before {
+    background: var(--amaya-brand-soft);
+    color: var(--amaya-on-brand-soft);
+  }
+
+  .tabbrowser-tab[amaya-letter-icon][pending] .tab-icon-stack::before {
+    background: none;
+    outline: 1px dashed var(--amaya-border-strong);
+    outline-offset: -1px;
+  }
+
+  .tab-label {
+    font: 500 13px/16px var(--amaya-font-ui);
+    color: var(--amaya-ink);
+    margin: 0;
+  }
+
+  /* Close button: on hover and on the active tab */
+  .tab-close-button {
+    width: 24px;
+    height: 24px;
+    padding: 6px;
+    margin: 0;
+    border-radius: var(--amaya-radius-sm);
+    color: var(--amaya-ink-muted);
+    fill: var(--amaya-ink-muted);
+    -moz-context-properties: fill;
+    background: none;
+    opacity: 1;
+    visibility: hidden;
+
+    &:hover {
+      background: var(--amaya-surface-sunken);
+      fill: var(--amaya-ink);
+    }
+  }
+
+  .tabbrowser-tab:is(:hover, [selected], :focus-within) .tab-close-button {
+    visibility: visible;
+  }
+
+  .tabbrowser-tab[pinned] .tab-close-button {
+    display: none;
+  }
+
+  /* Loading: a ring around the favicon */
+  .tab-throbber[busy] {
+    display: block;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--amaya-brand);
+    border-top-color: transparent;
+    border-radius: 50%;
+    background: none;
+    opacity: 1;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  /* Playing sound: the audio button in brand */
+  .tab-audio-button {
+    --button-icon-fill: var(--amaya-brand);
+    --button-background-color-ghost-hover: var(--amaya-surface-sunken);
+    color: var(--amaya-brand);
+  }
+
+  /* Suspended (not yet loaded or unloaded): muted title, dashed favicon */
+  .tabbrowser-tab[pending] {
+    .tab-label {
+      color: var(--amaya-ink-muted);
+      font-weight: 400;
+    }
+
+    .tab-icon-image {
+      outline: 1px dashed var(--amaya-border-strong);
+      outline-offset: 1px;
+      filter: none;
+      opacity: 1;
+    }
+  }
+
+  .tabbrowser-tab:focus-visible > .tab-stack > .tab-background,
+  .tabbrowser-tab[visuallyselected]:focus-visible > .tab-stack > .tab-background {
+    outline: 2px solid var(--amaya-focus-ring);
+    outline-offset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[amaya-shell] #amaya-sidebar .tab-throbber[busy] {
+    animation: amaya-shell-spin 900ms linear infinite;
+  }
+}
+
+@keyframes amaya-shell-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pinned tabs: a 3-column grid of 44px tiles */
+:root[amaya-shell] #amaya-sidebar #pinned-tabs-container[orient="vertical"] {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+:root[amaya-shell] #amaya-sidebar #tabbrowser-tabs[expanded] > #pinned-tabs-container[orient="vertical"] {
+  &::part(items-wrapper) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 44px;
+    gap: var(--amaya-space-2);
+    padding: 0;
+  }
+
+  .tabbrowser-tab[pinned] {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: 44px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tab-stack {
+    height: 44px;
+  }
+
+  .tab-background {
+    min-height: 44px;
+    height: 44px;
+    margin: 0;
+    background: var(--amaya-surface-page);
+  }
+
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected]) {
+    background: var(--amaya-surface-raised);
+  }
+
+  .tab-background[selected] {
+    background: var(--amaya-surface-raised);
+    box-shadow: var(--amaya-shadow-tab);
+  }
+
+  .tab-content {
+    justify-content: center;
+    padding: 0;
+    min-height: 44px;
+  }
+
+  .tab-label-container,
+  .tab-close-button {
+    display: none;
+  }
+}
+
+/* Divider between pinned tiles and tabs */
+:root[amaya-shell] #amaya-sidebar #vertical-pinned-tabs-splitter {
+  min-height: 9px;
+  height: 9px;
+  margin: 0 var(--amaya-space-2);
+  padding: 0;
+  border: 0;
+  background: linear-gradient(var(--amaya-border-subtle), var(--amaya-border-subtle)) center / 100% 1px no-repeat;
+  background-image: linear-gradient(var(--amaya-border-subtle), var(--amaya-border-subtle));
+  cursor: ns-resize;
+
+  &:hover {
+    background-color: transparent;
+    background-image: linear-gradient(var(--amaya-border-strong), var(--amaya-border-strong));
+  }
+}
+
+/* "New tab" row */
+:root[amaya-shell] #amaya-sidebar :is(#tabs-newtab-button, #vertical-tabs-newtab-button) {
+  appearance: none;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--amaya-space-2);
+  width: 100%;
+  height: var(--amaya-layout-row);
+  min-height: var(--amaya-layout-row);
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--amaya-radius-md);
+  background: none;
+  color: var(--amaya-ink-muted);
+  font: 500 13px/16px var(--amaya-font-ui);
+
+  &:hover {
+    background: var(--amaya-surface-page);
+    color: var(--amaya-ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amaya-focus-ring);
+    outline-offset: -2px;
+  }
+
+  > .toolbarbutton-icon {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    list-style-image: none;
+    background-color: currentColor;
+    mask: url("plus.svg") center / 16px 16px no-repeat;
+  }
+
+  > .toolbarbutton-text {
+    display: flex;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+  }
+}
+
+:root[amaya-shell] #amaya-sidebar #tabbrowser-arrowscrollbox-periphery {
+  padding-block: 2px;
+}
+
+:root[amaya-shell] #amaya-sidebar #tabbrowser-arrowscrollbox::part(scrollbox) {
+  scrollbar-width: thin;
+}
+
+/* Promo and drop hint for pinning stay out of the calm sidebar */
+:root[amaya-shell] #amaya-sidebar #drag-to-pin-promo-card {
+  display: none;
+}
+
+#amaya-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--amaya-space-2);
+  flex: none;
+  min-height: 0;
+}
+
+#amaya-sidebar-footer:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Web view card                                                       */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell]:not([inDOMFullscreen]) #tabbrowser-tabbox {
+  margin: var(--amaya-shell-inset) var(--amaya-shell-inset) var(--amaya-shell-inset) 0;
+  background: transparent;
+}
+
+:root[amaya-shell]:not([inDOMFullscreen]) #tabbrowser-tabpanels {
+  background: transparent;
+}
+
+:root[amaya-shell]:not([inDOMFullscreen]) #tabbrowser-tabpanels > :not(.split-view-panel) .browserContainer {
+  --content-area-start-radius: var(--amaya-radius-md);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-md);
+  outline: none;
+  box-shadow: none;
+  overflow: clip;
+  background: var(--amaya-surface-page) padding-box;
+}
+
+@media (-moz-platform: macos) {
+  :root[amaya-shell]:not([inDOMFullscreen]) #tabbrowser-tabpanels > :not(.split-view-panel) .browserContainer {
+    --content-scrollbar-inset-block: var(--amaya-radius-md);
+    --content-scrollbar-inset-inline-start: 0;
+    --content-scrollbar-inset-inline-end: 0;
+  }
+}
+
+/* Classic sidebar panels (bookmarks, history) sit beside the card */
+:root[amaya-shell] #sidebar-box {
+  margin-block: var(--amaya-shell-inset);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-surface-page);
+  overflow: clip;
+}
+
+:root[amaya-shell] #sidebar-splitter {
+  width: var(--amaya-shell-inset);
+  min-width: var(--amaya-shell-inset);
+  border: 0;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Compact mode                                                        */
+/* ------------------------------------------------------------------ */
+
+/* Collapsed: 52px, favicons only. */
+:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) {
+  width: var(--amaya-layout-sidebar-compact);
+  min-width: var(--amaya-layout-sidebar-compact);
+  max-width: var(--amaya-layout-sidebar-compact);
+}
+
+:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-sidebar {
+  padding-inline: var(--amaya-space-2);
+  align-items: stretch;
+}
+
+/* When it slides out over the page it reads as a floating panel. */
+:root[amaya-shell][amaya-compact] #sidebar-container:is([sidebar-launcher-expanded], [sidebar-ongoing-animations]) {
+  width: calc(var(--amaya-layout-sidebar) + var(--amaya-shell-inset));
+  border: 0;
+  box-shadow: var(--amaya-shadow-popover);
+  border-start-end-radius: var(--amaya-radius-lg);
+  border-end-end-radius: var(--amaya-radius-lg);
+}
+
+:root[amaya-shell][amaya-compact] #sidebar-container[sidebar-launcher-expanded] #amaya-sidebar {
+  padding-inline-end: var(--amaya-shell-inset);
+}
+
+:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) {
+  #amaya-sidebar-top {
+    justify-content: center;
+
+    > :not(#amaya-collapse-button) {
+      display: none;
+    }
+  }
+
+  #tabbrowser-tabs[orient="vertical"] {
+    .tab-content {
+      justify-content: center;
+      padding: 0;
+    }
+
+    .tab-label-container,
+    .tab-close-button,
+    .tab-audio-button {
+      display: none;
+    }
+
+    .tabbrowser-tab {
+      width: var(--amaya-layout-row);
+      margin-inline: auto;
+    }
+  }
+
+  #pinned-tabs-container[orient="vertical"] {
+    &::part(items-wrapper) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--amaya-space-1);
+    }
+
+    .tab-background {
+      background: var(--amaya-surface-page);
+    }
+
+    .tab-background[selected] {
+      background: var(--amaya-surface-raised);
+    }
+  }
+
+  :is(#tabs-newtab-button, #vertical-tabs-newtab-button) {
+    justify-content: center;
+    padding: 0;
+
+    > .toolbarbutton-text {
+      display: none;
+    }
+  }
+
+  #vertical-pinned-tabs-splitter {
+    margin-inline: var(--amaya-space-2);
+  }
+}
+
+/* Address field while collapsed: hidden until Ctrl+L, then it floats at the
+ * top of the page, centred, like the command bar. */
+:root[amaya-shell][amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-urlbar-slot:not(:focus-within) {
+  position: fixed;
+  inset-block-start: calc(-4 * var(--amaya-layout-row));
+  inset-inline-start: 0;
+  width: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+:root[amaya-shell][amaya-compact][amaya-urlbar-floating] {
+  #sidebar-container,
+  #sidebar-container > sidebar-main {
+    translate: none;
+    overflow: visible;
+  }
+
+  #amaya-urlbar-slot {
+    position: fixed;
+    z-index: 10;
+    inset-block-start: calc(var(--amaya-shell-inset) + var(--amaya-space-4));
+    inset-inline-start: calc(50vw - min(320px, 50vw - var(--amaya-space-4)) + var(--amaya-layout-sidebar-compact) / 2);
+    width: min(640px, 100vw - var(--amaya-layout-sidebar-compact) - 2 * var(--amaya-space-4));
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #amaya-urlbar-slot > #urlbar .urlbar-background {
+    border: 1px solid var(--amaya-border-subtle);
+    box-shadow: var(--amaya-shadow-popover);
+  }
+
+  #amaya-urlbar-slot > #urlbar[popover-open] > .urlbarView:popover-open {
+    width: anchor-size(--urlbar-anchor width);
+  }
+}
+
+/* Motion: 200ms ease-out for the sidebar, nothing under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[amaya-shell] .amaya-iconbtn,
+  :root[amaya-shell] #amaya-sidebar #tabbrowser-tabs .tab-background {
+    transition: background-color 120ms var(--amaya-shell-ease);
+  }
+}
