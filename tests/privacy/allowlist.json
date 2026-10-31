@@ -199,6 +199,22 @@
       "optional": true,
       "source": "docs/network-calls.md",
       "provisional": true
+    },
+    {
+      "host": "curbengh.github.io",
+      "port": 443,
+      "purpose": "uBlock Origin filter list mirror (malware-filter lists by curbengh), fetched on first run and on list updates",
+      "phase": "first-run",
+      "source": "docs/network-calls.md",
+      "provisional": true
+    },
+    {
+      "host": "versioncheck-bg.addons.mozilla.org",
+      "port": 443,
+      "purpose": "Background update check for installed extensions (keeps bundled uBlock Origin current)",
+      "phase": "idle",
+      "source": "docs/network-calls.md",
+      "provisional": true
     }
   ],
   "deny": [

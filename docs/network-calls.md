@@ -24,8 +24,8 @@ by a packet capture. Gate 1 should confirm or remove these.
 | `shavar.services.mozilla.com` | Safe Browsing protocol fallback for Mozilla-hosted lists (`gethash`) and some list updates. Tracking-protection lists now come via Remote Settings, so this may never be contacted. | Rare. | With Safe Browsing / ETP. | ? |
 | `aus5.mozilla.org` | GMP (media plug-in) update check: finds the Cisco OpenH264 codec used by WebRTC video calls. | After startup, then daily. | `media.gmp-gmpopenh264.enabled` = false (breaks H.264 WebRTC calls on some sites). Widevine (DRM) is not fetched while `media.eme.enabled` = false. | ? |
 | `ciscobinary.openh264.org` | Download of the OpenH264 plug-in announced by the check above. | Once, after the first GMP check; then on codec updates. | As above. | ? |
-| `versioncheck.addons.mozilla.org`, `services.addons.mozilla.org`, `addons.mozilla.org`, `addons.cdn.mozilla.net` | Update check for user extensions, including the bundled **uBlock Origin**; downloads the new XPI when there is one. Sends add-on IDs/versions, app version, locale. | Daily (`extensions.update.interval`); the first check is 24 h after the first start. | Policy `ExtensionUpdate: false` or per add-on in about:addons. Kept on: extension updates carry security fixes. | ✔ (host) / ? (first-check timing) |
-| uBlock Origin filter lists: `ublockorigin.github.io`, `ublockorigin.pages.dev`, `cdn.jsdelivr.net`, `cdn.statically.io`, `easylist.to`, `secure.fanboy.co.nz`, `pgl.yoyo.org`, `malware-filter.gitlab.io`, `malware-filter.pages.dev`, `publicsuffix.org`, `raw.githubusercontent.com` | uBO refreshes its enabled filter lists (it ships packaged copies). Plain GET requests, no identifiers. | ~37 s after launch (`autoUpdateDelayAfterLaunch`) if any list is stale, then every few days per list. | uBO dashboard › Filter lists › "Auto-update filter lists". Kept on: stale lists = worse blocking. | ? (exact host set depends on which lists uBO considers stale) |
+| `versioncheck.addons.mozilla.org`, `versioncheck-bg.addons.mozilla.org`, `services.addons.mozilla.org`, `addons.mozilla.org`, `addons.cdn.mozilla.net` | Update check for user extensions, including the bundled **uBlock Origin**; downloads the new XPI when there is one. Sends add-on IDs/versions, app version, locale. | Daily (`extensions.update.interval`); the first check is 24 h after the first start. | Policy `ExtensionUpdate: false` or per add-on in about:addons. Kept on: extension updates carry security fixes. | ✔ (host) / ? (first-check timing) |
+| uBlock Origin filter lists: `ublockorigin.github.io`, `ublockorigin.pages.dev`, `cdn.jsdelivr.net`, `cdn.statically.io`, `easylist.to`, `secure.fanboy.co.nz`, `pgl.yoyo.org`, `malware-filter.gitlab.io`, `malware-filter.pages.dev`, `curbengh.github.io`, `publicsuffix.org`, `raw.githubusercontent.com` | uBO refreshes its enabled filter lists (it ships packaged copies). Plain GET requests, no identifiers. | ~37 s after launch (`autoUpdateDelayAfterLaunch`) if any list is stale, then every few days per list. | uBO dashboard › Filter lists › "Auto-update filter lists". Kept on: stale lists = worse blocking. | ? (exact host set depends on which lists uBO considers stale) |
 
 ## 2. User-initiated or opt-in only (must NOT appear while idle)
 
@@ -58,7 +58,8 @@ by a packet capture. Gate 1 should confirm or remove these.
 | `location.services.mozilla.com` (region) | Region detection for search defaults | `browser.region.update.enabled` = false, `browser.region.network.url` = "". |
 | `use-application-dns.net` and other DoH heuristic canaries | DoH rollout heuristics | `doh-rollout.disable-heuristics` = true, TRR mode 5, enterprise policies present (heuristics stand down). |
 | `push.services.mozilla.com` | Web Push / Remote Settings broadcast channel | `dom.push.connection.enabled` = false. |
-| `detectportal.firefox.com` | Captive portal / connectivity | Prefs off (see §2). |
+| `detectportal.firefox.com`, `firefox-portal-detection.com` | Captive portal / connectivity | Prefs off (see §2). |
+| `update.googleapis.com` | Widevine DRM plugin download (Google component updater) | `media.gmp-widevinecdm.enabled` follows `media.eme.enabled` (off until the person enables DRM). Found by the Gate 1 test on 2026-10-30. |
 | `archive.mozilla.org/pub/system-addons/` | New-tab "train-hop" add-on updates (Nimbus-driven) | Nimbus off; `browser.newtabpage.trainhopAddon.xpiBaseURL` = "". |
 | `aus5.mozilla.org` (system add-ons) | System add-on updates | `DisableSystemAddonUpdate` policy; `extensions.systemAddon.update.enabled` = false. |
 | `aus5.mozilla.org` (app update) | Application updates (Linux) | Updater compiled out on Linux (`--disable-updater`); apt provides updates. macOS (Phase M) will contact an Amaya update manifest instead. |
@@ -113,6 +114,7 @@ Hosts the idle test must tolerate. `optional: true` = may or may not appear.
     {"host": "aus5.mozilla.org", "purpose": "GMP OpenH264 update check", "optional": true},
     {"host": "ciscobinary.openh264.org", "purpose": "OpenH264 download", "optional": true},
     {"host": "versioncheck.addons.mozilla.org", "purpose": "extension update check", "optional": true},
+    {"host": "versioncheck-bg.addons.mozilla.org", "purpose": "extension background update check", "optional": true},
     {"host": "services.addons.mozilla.org", "purpose": "extension update check", "optional": true},
     {"host": "addons.mozilla.org", "purpose": "extension update download", "optional": true},
     {"host": "addons.cdn.mozilla.net", "purpose": "extension update download", "optional": true},
@@ -125,6 +127,7 @@ Hosts the idle test must tolerate. `optional: true` = may or may not appear.
     {"host": "pgl.yoyo.org", "purpose": "uBO filter lists", "optional": true},
     {"host": "malware-filter.gitlab.io", "purpose": "uBO filter lists", "optional": true},
     {"host": "malware-filter.pages.dev", "purpose": "uBO filter lists", "optional": true},
+    {"host": "curbengh.github.io", "purpose": "uBO filter lists", "optional": true},
     {"host": "publicsuffix.org", "purpose": "uBO public suffix list", "optional": true},
     {"host": "raw.githubusercontent.com", "purpose": "uBO filter lists", "optional": true}
   ],
@@ -135,7 +138,7 @@ Hosts the idle test must tolerate. `optional: true` = may or may not appear.
     "ohttp-merino.mozilla.fastly-edge.com", "ohttp-gateway-merino.services.mozilla.com",
     "ads.mozilla.org", "mozilla-ohttp.fastly-edge.com", "contile.services.mozilla.com",
     "getpocket.com", "img-getpocket.cdn.mozilla.net", "location.services.mozilla.com",
-    "push.services.mozilla.com", "detectportal.firefox.com", "use-application-dns.net",
+    "push.services.mozilla.com", "detectportal.firefox.com", "firefox-portal-detection.com", "update.googleapis.com", "ipv4only.arpa", "use-application-dns.net",
     "accounts.firefox.com", "token.services.mozilla.com", "discovery.addons.mozilla.org",
     "sb-ssl.google.com", "www.mozilla.org", "support.mozilla.org",
     "mozilla.cloudflare-dns.com", "dns.mullvad.net", "dns.quad9.net"
