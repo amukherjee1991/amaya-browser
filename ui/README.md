@@ -146,4 +146,5 @@ The built app is `dist/stage/amaya/amaya` in the main checkout
 | `modules/privacy/` | privacy |
 | `modules/home/` | home (new tab + first run) |
 | `modules/extensions/` | extensions (Extensions button, pinned extension icons, extension command bar entries) |
+| `modules/about/` | about (the About Amaya card: Amaya release from `amaya-ui/version.json`, Gecko build, update status via `AmayaUI.update`; replaces `openAboutDialog`) |
 | `modules/update/` | update (Linux update check and prompt; reads `amaya-ui/version.json` written by `tools/amaya stage`) |
