@@ -1,0 +1,232 @@
+/* Amaya update module: the "Amaya x is ready" card in the sidebar, above the
+ * spaces switcher, and the dot on the collapse button in compact mode.
+ * Every value comes from tokens.css. */
+
+#amaya-update-card {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--amaya-space-2);
+  margin: 0 0 var(--amaya-space-2);
+  padding: var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-subtle);
+  border-radius: var(--amaya-radius-md);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  font: var(--amaya-type-tab-title);
+  -moz-window-dragging: no-drag;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #amaya-update-card {
+    animation: amaya-update-in var(--amaya-dur-popover) var(--amaya-ease-out);
+  }
+}
+
+@keyframes amaya-update-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.amaya-update__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--amaya-space-2);
+}
+
+.amaya-update__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--amaya-brand);
+}
+
+.amaya-update__title {
+  flex: 1;
+  min-width: 0;
+  font: var(--amaya-type-tab-title);
+  font-weight: 600;
+  color: var(--amaya-ink);
+}
+
+.amaya-update__text {
+  margin: 0;
+  font: var(--amaya-type-label);
+  font-weight: 400;
+  color: var(--amaya-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.amaya-update__text--info {
+  flex: 1;
+  min-width: 0;
+  color: var(--amaya-ink);
+}
+
+.amaya-update__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: -2px -4px 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--amaya-radius-sm);
+  background: none;
+  color: var(--amaya-ink-muted);
+  appearance: none;
+}
+
+.amaya-update__close .amaya-ico {
+  width: 14px;
+  height: 14px;
+}
+
+.amaya-update__close:hover {
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink);
+}
+
+.amaya-update__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--amaya-space-1) var(--amaya-space-2);
+}
+
+.amaya-update__btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  margin: 0;
+  padding: 0 var(--amaya-space-3);
+  border: 1px solid var(--amaya-border-strong);
+  border-radius: var(--amaya-radius-sm);
+  background: var(--amaya-surface-raised);
+  color: var(--amaya-ink);
+  font: var(--amaya-type-label);
+}
+
+.amaya-update__btn:hover {
+  background: var(--amaya-surface-sunken);
+}
+
+.amaya-update__btn--primary {
+  background: var(--amaya-brand);
+  border-color: var(--amaya-brand);
+  color: var(--amaya-on-brand);
+}
+
+.amaya-update__btn--primary:hover {
+  background: var(--amaya-brand-hover);
+  border-color: var(--amaya-brand-hover);
+}
+
+.amaya-update__btn--quiet {
+  padding-inline: var(--amaya-space-2);
+  background: transparent;
+  border-color: transparent;
+  color: var(--amaya-ink-muted);
+}
+
+.amaya-update__btn--quiet:hover {
+  background: var(--amaya-surface-sunken);
+  color: var(--amaya-ink);
+}
+
+.amaya-update__link {
+  appearance: none;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--amaya-brand);
+  font: var(--amaya-type-label);
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 2px;
+}
+
+.amaya-update__link:hover {
+  color: var(--amaya-brand-hover);
+}
+
+#amaya-update-card :is(button):focus-visible {
+  outline: 2px solid var(--amaya-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Progress */
+.amaya-update__bar {
+  position: relative;
+  height: 4px;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-surface-sunken);
+  overflow: hidden;
+}
+
+.amaya-update__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--amaya-brand);
+}
+
+.amaya-update__bar.is-indeterminate .amaya-update__fill {
+  width: 30%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .amaya-update__fill {
+    transition: width var(--amaya-dur-popover) var(--amaya-ease-out);
+  }
+  .amaya-update__bar.is-indeterminate .amaya-update__fill {
+    animation: amaya-update-slide 1.2s linear infinite;
+  }
+  .amaya-update__btn,
+  .amaya-update__close {
+    transition: background-color var(--amaya-dur-hover) var(--amaya-ease-out),
+      color var(--amaya-dur-hover) var(--amaya-ease-out);
+  }
+}
+
+@keyframes amaya-update-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* Compact mode: no card while collapsed; a dot on the collapse button
+ * instead.  Hovering or expanding the sidebar shows the card again. */
+:root[amaya-compact] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-update-card {
+  display: none;
+}
+
+:root[amaya-update-dot] #amaya-collapse-button {
+  position: relative;
+}
+
+:root[amaya-compact][amaya-update-dot] #sidebar-container:not([sidebar-launcher-expanded]) #amaya-collapse-button::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-end: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--amaya-radius-pill);
+  background: var(--amaya-brand);
+  box-shadow: 0 0 0 2px var(--amaya-surface-window);
+}
