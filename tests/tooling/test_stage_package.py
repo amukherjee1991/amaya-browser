@@ -173,7 +173,7 @@ class PackageTests(ToolTestCase):
             self.assertEqual(commands.package_cmd(self.ctx()), 0)
         m.assert_called_once_with(mock.ANY, "package")
         self.assertEqual(log.read_text().splitlines(), [
-            str(self.repo / "dist" / "stage" / "amaya"), "1.0-1", str(self.repo / "dist")])
+            str(self.repo / "dist" / "stage" / "amaya"), "1.0.0.1-1", str(self.repo / "dist")])
 
     def test_mach_env(self):
         env = self.ctx().mach_env()

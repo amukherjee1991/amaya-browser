@@ -115,7 +115,7 @@ def stage(ctx: Context, appdir: Path) -> None:
             warn(f"settings/{name} not found; skipping")
 
     try:
-        version = ctx.upstream().deb_version
+        version = ctx.upstream().amaya_version
     except AmayaError as e:
         warn(f"{e}; amaya-ui/version.json not written")
         version = None

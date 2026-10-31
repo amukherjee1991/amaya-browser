@@ -111,7 +111,8 @@ class VersionTests(ToolTestCase):
         self.assertEqual(up.amaya_revision, 1)
         self.assertEqual(up.tag, "upstream-1.0")
         self.assertEqual(up.tarball_name, "firefox-1.0.source.tar.xz")
-        self.assertEqual(up.deb_version, "1.0-1")
+        self.assertEqual(up.amaya_version, "1.0-1")
+        self.assertEqual(up.deb_version, "1.0.0.1-1")
         self.assertEqual(up.dist_tarball_name("linux", "x86_64"),
                          "amaya-1.0-1.linux-x86_64.tar.xz")
 
@@ -119,7 +120,21 @@ class VersionTests(ToolTestCase):
         self.write_upstream("file:///a/firefox-1.0.source.tar.xz", "file:///a/SHA512SUMS",
                             amaya_revision=3)
         up = self.ctx().upstream()
-        self.assertEqual(up.deb_version, "1.0-3")
+        self.assertEqual(up.amaya_version, "1.0-3")
+        self.assertEqual(up.deb_version, "1.0.0.3-1")
+
+    def test_deb_version_sorts_across_point_releases(self):
+        import subprocess
+        from amaya_tool.context import Upstream
+        cases = [("159.0", 5, "159.0.0.5-1"), ("159.0.1", 2, "159.0.1.2-1"), ("160.0", 1, "160.0.0.1-1")]
+        for v, rev, want in cases:
+            up = Upstream(version=v, source_url="file:///x", sha512sums_url="file:///y", amaya_revision=rev, channel="release", product="firefox")
+            self.assertEqual(up.deb_version, want)
+        # dpkg order: old scheme 159.0-4 < 159.0.0.5-1 < 159.0.1.1-1 < 160.0.0.1-1
+        chain = ["159.0-4", "159.0.0.5-1", "159.0.1.1-1", "160.0.0.1-1"]
+        for a, b in zip(chain, chain[1:]):
+            r = subprocess.run(["dpkg", "--compare-versions", a, "lt", b])
+            self.assertEqual(r.returncode, 0, f"{a} should sort before {b}")
 
     def test_invalid_revision(self):
         self.write_upstream("u", "s", amaya_revision="2")

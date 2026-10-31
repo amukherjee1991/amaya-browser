@@ -54,9 +54,19 @@ class Upstream:
         return self.source_url.rstrip("/").rsplit("/", 1)[-1]
 
     @property
-    def deb_version(self) -> str:
-        """Debian package version: <firefox version>-<amaya revision>."""
+    def amaya_version(self) -> str:
+        """Amaya release version, as tagged and shown in the app: 159.0-5."""
         return f"{self.version}-{self.amaya_revision}"
+
+    @property
+    def deb_version(self) -> str:
+        """Debian package version: the Firefox version padded to three parts,
+        then the Amaya revision, then "-1" (159.0 rev 5 -> 159.0.0.5-1;
+        159.0.1 rev 2 -> 159.0.1.2-1). Software centres hide the part after
+        the dash, so the Amaya revision has to live before it."""
+        parts = self.version.split(".")
+        parts += ["0"] * (3 - len(parts))
+        return ".".join(parts + [str(self.amaya_revision)]) + "-1"
 
     def dist_tarball_name(self, plat: str, arch: str) -> str:
         return f"amaya-{self.version}-{self.amaya_revision}.{plat}-{arch}.tar.xz"
