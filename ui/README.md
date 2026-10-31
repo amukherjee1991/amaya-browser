@@ -125,3 +125,4 @@ The built app is `dist/stage/amaya/amaya` in the main checkout
 | `modules/cmdbar/` | cmdbar |
 | `modules/privacy/` | privacy |
 | `modules/home/` | home (new tab + first run) |
+| `modules/update/` | update (Linux update check and prompt; reads `amaya-ui/version.json` written by `tools/amaya stage`) |
