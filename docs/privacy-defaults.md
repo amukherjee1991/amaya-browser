@@ -99,6 +99,7 @@ nothing can be re-enabled silently.
 | `identity.mobilepromo.android` | "" | Promo link. |
 | `browser.firefox-view.feature-tour` | completed | No Firefox View tour. |
 | `extensions.getAddons.showPane`, `extensions.htmlaboutaddons.recommendations.enabled` | false | No add-on recommendations; discovery API and theme-recommendation URLs empty. |
+| `extensions.getAddons.cache.enabled` | false | No metadata refresh of installed add-ons from services.addons.mozilla.org at start (issue #6). |
 | `browser.shell.checkDefaultBrowser` | false | No nag. |
 | `browser.startup.homepage_override.mstone`=`ignore`, `startup.homepage_welcome_url(.additional)`, `startup.homepage_override_url`, `datareporting.policy.firstRunURL` | empty | No mozilla.org pages. |
 | `app.support.baseURL` | unchanged (SUMO) | Only fetched when the user clicks Help/"Learn more"; SUMO documents the Gecko features we ship. Replace when Amaya has a help site. |
@@ -183,7 +184,7 @@ restart**. All values are defaults, so individual prefs can still be tuned.
 |---|---|---|
 | `privacy.resistFingerprinting` (+ `.pbmode`) | false | true |
 | `privacy.fingerprintingProtection` (+ `.pbmode`) | true | false (RFP supersedes it) |
-| `privacy.fingerprintingProtection.overrides` | `+CanvasRandomization,+EfficientCanvasRandomization,+WebGLRandomization,+WebGLRendererConstant,+WebGLVendorSanitize,+FontVisibilityLangPack,+NavigatorHWConcurrencyTiered,+MaxTouchPointsCollapse,+ScreenAvailToResolution,+JSMathFdlibm,+IMEStyle,+AudioSampleRate,+NavigatorOscpu,+NetworkConnection,+CSSColorInfo` | — |
+| `privacy.fingerprintingProtection.overrides` | `+CanvasRandomization,+EfficientCanvasRandomization,+WebGLRandomization,+WebGLRendererConstant,+WebGLVendorSanitize,+FontVisibilityLangPack,+NavigatorHWConcurrencyTiered,+MaxTouchPointsCollapse,+ScreenAvailToResolution,+JSMathFdlibm,+IMEStyle,+AudioSampleRate,+NavigatorOscpu,+NetworkConnection,+CSSColorInfo,+ScreenRect,+ScreenAvailRect` | — |
 | `privacy.resistFingerprinting.letterboxing` | — | true |
 | `privacy.resistFingerprinting.block_mozAddonManager` | — | true |
 | `privacy.spoof_english` | — | 2 (always request English) |
@@ -206,6 +207,7 @@ restart**. All values are defaults, so individual prefs can still be tuned.
 |---|---|---|
 | `extensions.systemAddon.update.enabled` false, `.update.url` "" | — | System add-ons update with the app. |
 | `extensions.update.enabled`, `extensions.update.autoUpdateDefault` | true | User extensions (incl. uBO) get security updates from AMO, daily. |
+| `app.update.lastUpdateTime.addon-background-update-timer`, `media.gmp-manager.lastCheck` | first-run time (once, user value) | A new profile makes its first add-on update check and its first OpenH264 download a day after first start instead of in the first minute; the bundled uBO ships with the release (issue #6). |
 | `extensions.installDistroAddons` | true | Copy `distribution/extensions/*.xpi` into the profile on first run, **no network fetch**. Distribution installs are not "foreign", so they start enabled. |
 | `extensions.autoDisableScopes` | 15 | Sideloaded add-ons in any scope start disabled (security). Does not affect distribution installs. |
 | `extensions.enabledScopes` | 5 | Load add-ons only from the profile and the app dir; ignore `~/.mozilla/extensions` and `/usr/lib/mozilla/extensions`. |

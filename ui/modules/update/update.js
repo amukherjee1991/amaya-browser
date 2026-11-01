@@ -81,6 +81,10 @@
   // A window becoming active re-checks when the last check is this old.
   const FOCUS_STALE_MS = 60 * 60 * 1000;
   const APT_SOURCES = "/etc/apt/sources.list.d/amaya.sources";
+  // apt's downloaded copy of our package index (apt refreshes it on its own
+  // schedule); apt installs read it instead of asking the server themselves.
+  const APT_LISTS = "/var/lib/apt/lists";
+  const APT_INDEX_RE = /^amaya\.arghyam\.me_apt_dists_stable_.*_Packages$/;
   // System updaters for apt installs, in order of preference.
   const UPDATERS = [
     ["/usr/bin/update-manager", []],
@@ -253,6 +257,48 @@
     return dir === DEB_PREFIX || dir.startsWith(DEB_PREFIX + "/") ? "deb" : "tar";
   }
 
+  // Debian version "159.0.0.6-1" -> Amaya version "159.0-6".
+  function fromDebVersion(v) {
+    const m = /^(\d+(?:\.\d+)*)\.(\d+)-\d+$/.exec(String(v ?? "").trim());
+    if (!m) {
+      return null;
+    }
+    const parts = m[1].split(".");
+    while (parts.length > 2 && parts[parts.length - 1] === "0") {
+      parts.pop();
+    }
+    return `${parts.join(".")}-${m[2]}`;
+  }
+
+  // Newest Amaya version in apt's local copy of our index, "" if the index
+  // is there but lists no amaya, null if there is no (uncompressed) index.
+  async function aptIndexVersion() {
+    let names;
+    try {
+      names = (await IOUtils.getChildren(APT_LISTS)).map(p => PathUtils.filename(p));
+    } catch (e) {
+      return null;
+    }
+    const files = names.filter(n => APT_INDEX_RE.test(n));
+    if (!files.length) {
+      return null;
+    }
+    let best = "";
+    for (const name of files) {
+      const text = await IOUtils.readUTF8(PathUtils.join(APT_LISTS, name));
+      for (const stanza of text.split(/\n\s*\n/)) {
+        if (!/^Package:\s*amaya\s*$/m.test(stanza)) {
+          continue;
+        }
+        const v = fromDebVersion(/^Version:\s*(\S+)\s*$/m.exec(stanza)?.[1]);
+        if (v && (!best || compareVersions(v, best) > 0)) {
+          best = v;
+        }
+      }
+    }
+    return best;
+  }
+
   function headless() {
     try {
       return Services.env.exists("MOZ_HEADLESS") && Services.env.get("MOZ_HEADLESS") !== "0";
@@ -362,11 +408,25 @@
       prefs.setIntPref(PREF.lastCheck, Math.floor(Date.now() / 1000));
       await refreshApt();
       let manifest;
-      try {
-        const res = await fetchOk(url);
-        manifest = cleanManifest(await res.json(), res.url || url);
-      } catch (e) {
-        log(`update check failed: ${e}`);
+      // apt installs: apt already fetches our index, so read its copy and
+      // make no request of our own. An explicit check still asks the server.
+      if (!manual && installType() === "apt") {
+        try {
+          const v = await aptIndexVersion();
+          if (v !== null) {
+            manifest = cleanManifest({ version: v || current }, url);
+          }
+        } catch (e) {
+          log(`apt index: ${e}`);
+        }
+      }
+      if (!manifest) {
+        try {
+          const res = await fetchOk(url);
+          manifest = cleanManifest(await res.json(), res.url || url);
+        } catch (e) {
+          log(`update check failed: ${e}`);
+        }
       }
       if (!manifest) {
         if (manual) {
