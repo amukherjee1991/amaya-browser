@@ -61,6 +61,12 @@ Run on the merge commit, before tagging:
       `about:support` shows Fission windows enabled.
 - [ ] **HTTPS-only unchanged:** `dom.security.https_only_mode` is `true`, and
       `http://example.com` upgrades to HTTPS.
+- [ ] **Mixed scripts never load over http:** on
+      <https://mixed-script.badssl.com> the `http://` script is upgraded to
+      https (HTTPS-Only) or blocked. To check on the wire:
+      `MOZ_LOG=nsHttp:3 MOZ_LOG_FILE=/tmp/mc amaya --headless --screenshot
+      /tmp/mc.png https://mixed-script.badssl.com/`; the log must show
+      `GET /nonsecure.js` only on a `mixed-script.badssl.com:443` connection.
 - [ ] **Certificate checks unchanged:** <https://expired.badssl.com> and
       <https://self-signed.badssl.com> show an error page.
 - [ ] `git diff <previous-tag> -- patches/ settings/` reviewed. No patch
