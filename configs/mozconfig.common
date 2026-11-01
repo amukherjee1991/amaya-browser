@@ -15,6 +15,8 @@ ac_add_options --with-app-basename=Amaya
 # Internal program name used for X11/Wayland remoting and WM_CLASS
 # (keep in sync with StartupWMClass in the .desktop file).
 ac_add_options MOZ_APP_REMOTINGNAME=amaya
+# NOTE: MOZ_APP_UA_NAME (the user agent's app token) is implied-only too;
+# patches/0102-privacy-ua-name-firefox.patch sets it to Firefox.
 # NOTE: MOZ_APP_VENDOR cannot be set here: in 159 it is a project_flag that
 # only accepts "implied" values (browser/moz.configure sets "Mozilla"); a
 # mozconfig/env value makes configure fail. Changing it needs a patch.

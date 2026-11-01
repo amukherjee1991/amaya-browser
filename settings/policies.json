@@ -88,6 +88,18 @@
         "default_area": "navbar"
       }
     },
-    "ExtensionUpdate": true
+    "ExtensionUpdate": true,
+    "3rdparty": {
+      "Extensions": {
+        "uBlock0@raymondhill.net": {
+          "advancedSettings": [
+            [
+              "selfieDelayInSeconds",
+              "5"
+            ]
+          ]
+        }
+      }
+    }
   }
 }
