@@ -5,6 +5,12 @@ ac_add_options --disable-updater
 # lld from the bootstrapped clang toolchain (already the default with clang;
 # explicit so a missing lld fails loudly instead of falling back).
 ac_add_options --enable-linker=lld
-# Link-time optimisation: smaller/faster binary, but adds a lot of link time
-# and memory. Off by default for local builds; enable for release builds.
-#ac_add_options --enable-lto=cross
+# Release optimisation, as in Mozilla's own Linux builds (issue #3): without
+# these Speedometer was 28% behind Firefox 159.
+# Cross-language (C++ + Rust) link-time optimisation.
+ac_add_options --enable-lto=cross
+# Profile-guided optimisation: `mach build` builds an instrumented copy, runs
+# build/pgo/profileserver.py in it (needs a display: DISPLAY must be set, a
+# headless X server is enough), then rebuilds using the profile. About 3x a
+# plain build.
+ac_add_options MOZ_PGO=1
