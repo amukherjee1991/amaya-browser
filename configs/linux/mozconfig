@@ -9,6 +9,12 @@ ac_add_options --enable-linker=lld
 # these Speedometer was 28% behind Firefox 159.
 # Cross-language (C++ + Rust) link-time optimisation.
 ac_add_options --enable-lto=cross
+# Cross-language LTO links Rust and C++ bitcode together, so rustc's LLVM
+# must match the bootstrapped clang's (clang 22 for Firefox 159). Use the
+# Rust version Mozilla builds this release with
+# (taskcluster/kinds/toolchain/rust.yml); `rustup toolchain install 1.95.0`.
+# Update on each Firefox rebase.
+export RUSTUP_TOOLCHAIN=1.95.0
 # Profile-guided optimisation: `mach build` builds an instrumented copy, runs
 # build/pgo/profileserver.py in it (needs a display: DISPLAY must be set, a
 # headless X server is enough), then rebuilds using the profile. About 3x a
