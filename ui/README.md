@@ -158,4 +158,5 @@ The built app is `dist/stage/amaya/amaya` in the main checkout
 | `modules/home/` | home (new tab + first run) |
 | `modules/extensions/` | extensions (extension row with icons and the Extensions button, extension command bar entries) |
 | `modules/about/` | about (the About Amaya card: Amaya release from `amaya-ui/version.json`, Gecko build, update status via `AmayaUI.update`; replaces `openAboutDialog`) |
+| `modules/glass/` | glass (optional glass look, pref `amaya.ui.glass`, off by default: window gradient from the active space's colour plus grain, translucent sidebar controls, denser frosted floating UI; "Glass mode" in the command bar toggles it) |
 | `modules/update/` | update (Linux update check and prompt, every 4 h and on window activation after 1 h; reads `amaya-ui/version.json` written by `tools/amaya stage`; .deb installs with `/etc/apt/sources.list.d/amaya.sources` hand **Update** to Software Updater / GNOME Software via `nsIProcess`, others download and verify the file) |

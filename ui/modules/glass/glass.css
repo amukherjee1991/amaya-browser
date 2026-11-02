@@ -1,0 +1,147 @@
+/* Amaya glass mode (pref amaya.ui.glass). Colours derive from tokens.css
+ * (--amaya-*); only mixes, alphas and blur amounts are set here.
+ *
+ * The look comes from layers, not from blurring web content (stock Gecko's
+ * backdrop-filter in the chrome cannot read the content process):
+ *  1. A vivid gradient from the active space's colour plus two neighbouring
+ *     hues, over the window surface.
+ *  2. A fine grain on top, so the gradient reads as frosted rather than flat.
+ *  3. Chrome controls as glass films: translucent fill, a light hairline
+ *     edge and an inner highlight, blurred over the gradient behind them.
+ *  4. The page floats on the gradient as a card with a soft shadow.
+ * Floating UI over the page (command bar, Glance, urlbar results) gets a
+ * denser fill so text stays readable without content blur. */
+
+:root[amaya-glass] {
+  /* Set by glass.js from the active space; brand colour until then. */
+  --amaya-glass-tint: var(--amaya-brand);
+  --amaya-glass-tint-2: oklch(from var(--amaya-glass-tint) calc(l + 0.08) c calc(h + 55));
+  --amaya-glass-tint-3: oklch(from var(--amaya-glass-tint) calc(l - 0.04) calc(c * 1.1) calc(h - 50));
+  --amaya-glass-strength: 62%;
+
+  /* Glass films. Light mode: white films; dark mode: see below. */
+  --amaya-glass-film: color-mix(in srgb, var(--amaya-surface-raised) 52%, transparent);
+  --amaya-glass-film-hover: color-mix(in srgb, var(--amaya-surface-raised) 30%, transparent);
+  --amaya-glass-film-strong: color-mix(in srgb, var(--amaya-surface-raised) 70%, transparent);
+  --amaya-glass-edge: color-mix(in srgb, var(--amaya-surface-raised) 75%, transparent);
+  --amaya-glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--amaya-surface-raised) 80%, transparent);
+  --amaya-glass-popover: color-mix(in srgb, var(--amaya-surface-raised) 88%, transparent);
+  --amaya-glass-blur: blur(20px) saturate(180%);
+  --amaya-glass-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 0.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Dark: the films are made of ink (light) at low alpha, as white glass on a
+ * dark gradient, instead of the dark raised surface. */
+@media (prefers-color-scheme: dark) {
+  :root[amaya-glass]:not([data-theme="light"]) {
+    --amaya-glass-strength: 48%;
+    --amaya-glass-film: color-mix(in srgb, var(--amaya-ink) 12%, transparent);
+    --amaya-glass-film-hover: color-mix(in srgb, var(--amaya-ink) 7%, transparent);
+    --amaya-glass-film-strong: color-mix(in srgb, var(--amaya-ink) 16%, transparent);
+    --amaya-glass-edge: color-mix(in srgb, var(--amaya-ink) 16%, transparent);
+    --amaya-glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--amaya-ink) 14%, transparent);
+  }
+}
+
+:root[amaya-glass][data-theme="dark"] {
+  --amaya-glass-strength: 48%;
+  --amaya-glass-film: color-mix(in srgb, var(--amaya-ink) 12%, transparent);
+  --amaya-glass-film-hover: color-mix(in srgb, var(--amaya-ink) 7%, transparent);
+  --amaya-glass-film-strong: color-mix(in srgb, var(--amaya-ink) 16%, transparent);
+  --amaya-glass-edge: color-mix(in srgb, var(--amaya-ink) 16%, transparent);
+  --amaya-glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--amaya-ink) 14%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 1 + 2. Gradient and grain                                           */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell][amaya-glass] {
+  background-color: var(--amaya-surface-window);
+  background-image:
+    var(--amaya-glass-grain),
+    radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--amaya-glass-tint) var(--amaya-glass-strength), transparent) 10%, transparent 70%),
+    radial-gradient(circle at 95% 0%, color-mix(in oklch, var(--amaya-glass-tint-2) var(--amaya-glass-strength), transparent) 0%, transparent 75%),
+    linear-gradient(-5deg, color-mix(in oklch, var(--amaya-glass-tint-3) var(--amaya-glass-strength), transparent) 10%, transparent 80%);
+  /* The grain blends into the gradient under it. */
+  background-blend-mode: overlay, normal, normal, normal;
+}
+
+:root[amaya-shell][amaya-glass] body,
+:root[amaya-shell][amaya-glass] #browser,
+:root[amaya-shell][amaya-glass] #navigator-toolbox,
+:root[amaya-shell][amaya-glass] #sidebar-container,
+:root[amaya-shell][amaya-glass] #amaya-sidebar {
+  background-color: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Glass films                                                      */
+/* ------------------------------------------------------------------ */
+
+/* Every sidebar control reads the surface tokens: swap them for films. */
+:root[amaya-shell][amaya-glass] #sidebar-container {
+  --amaya-surface-raised: var(--amaya-glass-film);
+  --amaya-surface-page: var(--amaya-glass-film-hover);
+  --amaya-surface-sunken: var(--amaya-glass-film-hover);
+  --amaya-border-subtle: var(--amaya-glass-edge);
+}
+
+:root[amaya-shell][amaya-glass] #amaya-sidebar #tabbrowser-tabs[orient="vertical"] .tab-background:is([selected], [multiselected]),
+:root[amaya-shell][amaya-glass] #amaya-urlbar-slot > #urlbar:not([open]) .urlbar-background {
+  border: 1px solid var(--amaya-glass-edge);
+  box-shadow: var(--amaya-glass-highlight), var(--amaya-shadow-tab);
+  backdrop-filter: var(--amaya-glass-blur);
+}
+
+:root[amaya-shell][amaya-glass] #amaya-urlbar-slot > #urlbar[focused]:not([open]) .urlbar-background {
+  background-color: var(--amaya-glass-film-strong);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Floating page card                                               */
+/* ------------------------------------------------------------------ */
+
+:root[amaya-shell][amaya-glass]:not([inDOMFullscreen]) #tabbrowser-tabpanels > :not(.split-view-panel) .browserContainer {
+  border-color: var(--amaya-glass-edge);
+  box-shadow: var(--amaya-shadow-popover);
+}
+
+/* ------------------------------------------------------------------ */
+/* Floating UI                                                         */
+/* ------------------------------------------------------------------ */
+
+/* Compact sidebar sliding out over the page. */
+:root[amaya-shell][amaya-glass][amaya-compact] #sidebar-container:is([sidebar-launcher-expanded], [sidebar-ongoing-animations]) {
+  background: var(--amaya-glass-popover);
+  backdrop-filter: var(--amaya-glass-blur);
+}
+
+/* Address field results. */
+:root[amaya-shell][amaya-glass] #amaya-urlbar-slot > #urlbar[open] > .urlbar-background,
+:root[amaya-shell][amaya-glass] #amaya-urlbar-slot > #urlbar[popover-open] > .urlbarView > .urlbarView-background {
+  background-color: var(--amaya-glass-popover);
+  backdrop-filter: var(--amaya-glass-blur);
+}
+
+:root[amaya-glass] .amaya-cmdbar,
+:root[amaya-glass] .amaya-glance {
+  border: 1px solid var(--amaya-glass-edge);
+  background: var(--amaya-glass-popover);
+  box-shadow: var(--amaya-glass-highlight), var(--amaya-shadow-popover);
+  backdrop-filter: var(--amaya-glass-blur);
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced transparency: keep the gradient, make every film opaque.    */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[amaya-glass] {
+    --amaya-glass-film: var(--amaya-surface-raised);
+    --amaya-glass-film-hover: var(--amaya-surface-page);
+    --amaya-glass-film-strong: var(--amaya-surface-raised);
+    --amaya-glass-popover: var(--amaya-surface-raised);
+    --amaya-glass-blur: none;
+  }
+}
