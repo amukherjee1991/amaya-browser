@@ -66,7 +66,7 @@ Each module lives in `modules/<name>/` and owns only that folder.
 | Id | Where | Used by |
 |---|---|---|
 | `amaya-sidebar` | The left sidebar column (Gecko's vertical-tabs sidebar, restyled) | shell |
-| `amaya-sidebar-top` | Top row: collapse, back, forward, menu | shell |
+| `amaya-sidebar-top` | Top row: collapse, back, forward, reload/stop, menu | shell |
 | `amaya-urlbar-slot` | Where the address field lives in the sidebar | shell (moves `#urlbar` here), privacy (shield), extensions (adds its row after it) |
 | `amaya-ext-row` | Extension icons + Extensions button, right under the address field (created by **extensions**, not shell) | extensions |
 | `amaya-pins` | 3-column pinned tiles grid | shell |

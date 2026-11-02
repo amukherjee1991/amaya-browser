@@ -260,6 +260,12 @@
   opacity: 0.5;
 }
 
+/* Reload turns into stop while the page loads. */
+#amaya-reload-button:not([loading]) > .amaya-stop-ico,
+#amaya-reload-button[loading] > .amaya-reload-ico {
+  display: none;
+}
+
 .amaya-iconbtn:focus-visible {
   outline: 2px solid var(--amaya-focus-ring);
   outline-offset: 2px;

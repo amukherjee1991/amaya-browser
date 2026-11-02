@@ -1,7 +1,7 @@
 /* Amaya shell module.
  *
  * Turns Gecko's native vertical tabs + revamped sidebar into the Amaya
- * sidebar: top row (collapse, back, forward, menu), the real #urlbar moved
+ * sidebar: top row (collapse, back, forward, reload, menu), the real #urlbar moved
  * into the sidebar, pinned tabs as a 3-column tile grid, tab rows, a "New tab"
  * row and a footer for the space switcher. Hides the top bars, turns the web
  * view into one inset card and adds compact mode (52px, slides out on hover).
@@ -35,6 +35,8 @@
     sidebar: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M9 5v14"/>',
     back: '<path d="M15 6l-6 6 6 6"/>',
     forward: '<path d="M9 6l6 6-6 6"/>',
+    reload: '<path d="M19 12a7 7 0 11-2.05-4.95"/><path d="M19 5v4h-4"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
   };
 
   let state = null;
@@ -306,6 +308,36 @@
     navigate(back, "back");
     navigate(forward, "forward");
 
+    // Reload, or stop while the page loads (Firefox's combined button):
+    // shift bypasses the cache, middle click duplicates the tab.
+    const reloadIcon = icon(doc, "reload");
+    reloadIcon.classList.add("amaya-reload-ico");
+    const stopIcon = icon(doc, "close");
+    stopIcon.classList.add("amaya-stop-ico");
+    const reload = html(
+      doc,
+      "button",
+      {
+        id: "amaya-reload-button",
+        class: "amaya-iconbtn",
+        type: "button",
+      },
+      reloadIcon,
+      stopIcon
+    );
+    const reloadOrStop = e => {
+      if (e.type == "auxclick" && e.button != 1) {
+        return;
+      }
+      if (reload.hasAttribute("loading")) {
+        win.BrowserCommands.stop();
+      } else {
+        win.BrowserCommands.reloadOrDuplicate(e);
+      }
+    };
+    reload.addEventListener("click", reloadOrStop);
+    reload.addEventListener("auxclick", reloadOrStop);
+
     // Mirror the enabled state of the native commands.
     const sync = () => {
       back.disabled =
@@ -313,9 +345,18 @@
       forward.disabled =
         doc.getElementById("Browser:Forward")?.getAttribute("disabled") ==
         "true";
+      // Browser:Stop is enabled exactly while the selected tab is loading.
+      const stopCmd = doc.getElementById("Browser:Stop");
+      const loading = !!stopCmd && !stopCmd.hasAttribute("disabled");
+      reload.toggleAttribute("loading", loading);
+      const label = loading ? "Stop" : "Reload";
+      reload.setAttribute("aria-label", label);
+      reload.title = loading
+        ? "Stop (Esc)"
+        : `Reload (${shortcutLabel(win, "R")})`;
     };
     const mo = new win.MutationObserver(sync);
-    for (const id of ["Browser:Back", "Browser:Forward"]) {
+    for (const id of ["Browser:Back", "Browser:Forward", "Browser:Stop"]) {
       const cmd = doc.getElementById(id);
       if (cmd) {
         mo.observe(cmd, { attributes: true, attributeFilter: ["disabled"] });
@@ -329,7 +370,7 @@
       "aria-hidden": "true",
     });
 
-    top.append(collapse, spacer, back, forward);
+    top.append(collapse, spacer, back, forward, reload);
     return { top, collapse };
   }
 
