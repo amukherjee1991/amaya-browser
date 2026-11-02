@@ -211,6 +211,7 @@ class MacPackageTests(ToolTestCase):
         (bundle / "Contents" / "MacOS" / "amaya").write_text("#!/bin/sh\n")
         (bundle / "Contents" / "Resources").mkdir(parents=True)
         (volume / "Applications").symlink_to("/Applications")
+        self.codesign_calls = []
 
         def copy_into(src: Path, dst: Path) -> None:
             dst.mkdir(parents=True, exist_ok=True)
@@ -248,6 +249,10 @@ class MacPackageTests(ToolTestCase):
                 if not dest.endswith(".dmg"):
                     dest += ".dmg"
                 Path(dest).write_bytes(b"fake dmg built")
+            elif cmd[:2] == ["xattr", "-rd"] or cmd[:2] == ["codesign", "--force"]:
+                # codesign_adhoc(): real macOS-only tools, not exercised here -
+                # just record that repackage() called them.
+                self.codesign_calls.append(cmd)
             return mock.Mock(returncode=0, stdout="", stderr="")
 
         return mock.patch.object(commands, "run", side_effect=side_effect)
@@ -285,6 +290,14 @@ class MacPackageTests(ToolTestCase):
         self.assertTrue((stage_root / "Applications").is_symlink())
         self.assertEqual(out.name, f"Amaya-{self.version}-1-arm64.dmg")
         self.assertTrue(out.is_file())
+        # Re-signed after staging added files under Contents/Resources/, or
+        # the bundle's CodeDirectory no longer matches what's on disk and
+        # macOS treats it as damaged rather than merely unsigned.
+        self.assertEqual(len(self.codesign_calls), 2)
+        self.assertEqual(self.codesign_calls[0][:2], ["xattr", "-rd"])
+        self.assertEqual(self.codesign_calls[1][:2], ["codesign", "--force"])
+        self.assertEqual(self.codesign_calls[0][-1], str(appdir))
+        self.assertEqual(self.codesign_calls[1][-1], str(appdir))
 
     def test_package_with_prebuilt_engine_builds_dmg(self):
         dmg = self.make_mach_dmg()

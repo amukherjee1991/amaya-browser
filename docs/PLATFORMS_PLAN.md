@@ -97,8 +97,33 @@ entry — `packagedType()` returns `"dmg"` on macOS instead of falling through t
 
 ### Packaging and distribution
 - `.dmg` from `mach package` (works when cross-compiling).
-- Homebrew cask: template in `packaging/macos/amaya.rb.template`; publish in a
-  tap repo (`amukherjee1991/homebrew-amaya`) so `brew install --cask amukherjee1991/amaya/amaya` works.
+- **Code signing (ad-hoc, pre-Developer-ID):** `mach`'s own build only gives
+  each Mach-O a lightweight linker-applied ad-hoc signature; nothing signs the
+  *bundle* itself, which is what Finder/LaunchServices/`open`/`brew` check (a
+  bare CLI exec does not, which is why this was invisible in earlier terminal
+  testing). An unsigned bundle is an ordinary Gatekeeper block; a bundle whose
+  CodeDirectory claims sealed Resources that don't match disk (true here,
+  worse after staging adds files) reads as *tampered* instead — no bypass,
+  just "Amaya is damaged, move it to the Trash." `tools/amaya package` now
+  ad-hoc re-signs (`codesign --force --deep --sign -`) after staging, having
+  first stripped the `com.apple.FinderInfo` xattr `cp -a` carries over (which
+  `codesign` otherwise refuses to sign past).
+- **Quarantine (found 2026-11-02, by far the sharpest edge so far):** even
+  correctly ad-hoc-signed, a *quarantined* unsigned/unnotarized app keeps
+  `syspolicyd` retrying an online notarization check that can never succeed,
+  and macOS removes the app **on quit** once it gives up — confirmed by direct
+  testing (launch+quit with quarantine present → vanishes from
+  `/Applications`; same with quarantine cleared *before* the first launch →
+  survives). The ordinary right-click → Open bypass does not prevent this; the
+  quarantine flag itself has to go. Real Developer ID signing + notarization
+  is the actual fix; until then, the Homebrew cask clears quarantine with a
+  `postflight` hook (Homebrew's newer sandboxed `postflight_steps` DSL can't
+  see `appdir`, so this uses the classic block) — the `.dmg` downloaded by
+  hand still needs the manual `xattr -dr com.apple.quarantine` step the
+  caveats describe.
+- Homebrew cask: real (not template) at `amukherjee1991/homebrew-amaya`,
+  `brew install --cask amukherjee1991/amaya/amaya` tested working end to end
+  (install → launch → quit → survives) as of 159.0-8.
 
 ### UI layer on macOS
 - Shell: window controls (traffic lights) top-left of the sidebar — already
@@ -116,9 +141,10 @@ entry — `packagedType()` returns `"dmg"` on macOS instead of falling through t
 
 **Work items**
 - [ ] Decide the Apple Developer account (needed before a signed release)
-- [x] `configs/macos/mozconfig`, `tools/amaya fetch/bootstrap/import` run natively on an
-      Apple Silicon Mac without changes (`feat/macos` branch, 2026-11-01); `tools/amaya build`
-      underway as this is written — see the branch for the outcome. `engine.yml` /
+- [x] `configs/macos/mozconfig`, `tools/amaya fetch/bootstrap/import/build/package` run
+      natively on an Apple Silicon Mac without changes (`feat/macos` branch, first full
+      build 2026-11-01→02, ~73 min); the resulting unsigned `.dmg` launches, loads a real
+      page and renders correctly (verified with a headless screenshot). `engine.yml` /
       `release.yml` got `macos-aarch64` jobs, gated behind `workflow_dispatch`
       (`build_macos: true`) rather than the normal push/tag trigger until a
       real CI run has been checked — cross-compiling on Linux is still untried
@@ -135,7 +161,7 @@ entry — `packagedType()` returns `"dmg"` on macOS instead of falling through t
       compact-mode traffic-light hover is still a known cosmetic gap
 - [x] amaya.arghyam.me: `.dmg` wired into `latest.json`/`sync-release.py`/`site.js`,
       offered first to visitors on a Mac (website repo, `feat/macos` branch)
-- [ ] Homebrew tap
+- [x] Homebrew tap (`amukherjee1991/homebrew-amaya`), working end to end — see above
 - [ ] Intel build, then universal
 
 **Estimate:** 3–5 days of work once the Apple Developer account exists; an

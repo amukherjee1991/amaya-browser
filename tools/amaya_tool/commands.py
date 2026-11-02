@@ -141,6 +141,26 @@ def make_dmg(src_root: Path, out: Path) -> None:
     tmp.replace(out)
 
 
+def codesign_adhoc(appdir: Path) -> None:
+    """Ad-hoc re-sign the bundle after staging settings/ui into it.
+
+    mach's own build only gives each Mach-O a lightweight linker-applied
+    ad-hoc signature (arm64 requires one to run at all); nothing ever signs
+    the *bundle* itself, which macOS's app-launch path (Finder, LaunchServices,
+    `open`, `brew`) checks and a bare CLI exec does not - the gap is invisible
+    in `tools/amaya run`-style testing. An unsigned bundle is an ordinary,
+    bypassable Gatekeeper block ("unidentified developer"); a bundle whose
+    CodeDirectory claims sealed Resources that do not match what's on disk
+    (true of every bundle here, and certainly true after staging adds new
+    files under Resources/) is "damaged" instead - no bypass, and double-
+    clicking it offers only "Move to Trash". `cp -a` while assembling the
+    stage also carries over `com.apple.FinderInfo` xattrs, which `codesign`
+    refuses to sign over, so those are stripped first. Real Developer ID
+    signing replaces this once that exists (Phase M)."""
+    run(["xattr", "-rd", "com.apple.FinderInfo", str(appdir)], check=False)
+    run(["codesign", "--force", "--deep", "--sign", "-", str(appdir)])
+
+
 def repackage(ctx: Context, mach_archive: Path) -> tuple[Path, Path]:
     """Extract mach's package into dist/stage, stage settings, and rebuild
     the final artifact (re-tar on Linux, rebuild the dmg on macOS)."""
@@ -152,6 +172,7 @@ def repackage(ctx: Context, mach_archive: Path) -> tuple[Path, Path]:
     if ctx.platform == "macos":
         appdir = find_app_bundle(stage_root)
         stage(ctx, appdir / "Contents" / "Resources")
+        codesign_adhoc(appdir)
         out = ctx.dist / f"Amaya-{up.amaya_version}-{macos_arch_label(ctx)}.dmg"
         make_dmg(stage_root, out)
     else:
