@@ -5,10 +5,9 @@
  * backdrop-filter in the chrome cannot read the content process):
  *  1. A vivid gradient from the active space's colour plus two neighbouring
  *     hues, over the window surface.
- *  2. A fine grain on top, so the gradient reads as frosted rather than flat.
- *  3. Chrome controls as glass films: translucent fill, a light hairline
+ *  2. Chrome controls as glass films: translucent fill, a light hairline
  *     edge and an inner highlight, blurred over the gradient behind them.
- *  4. The page floats on the gradient as a card with a soft shadow.
+ *  3. The page floats on the gradient as a card with a soft shadow.
  * Floating UI over the page (command bar, Glance, urlbar results) gets a
  * denser fill so text stays readable without content blur. */
 
@@ -27,7 +26,6 @@
   --amaya-glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--amaya-surface-raised) 80%, transparent);
   --amaya-glass-popover: color-mix(in srgb, var(--amaya-surface-raised) 88%, transparent);
   --amaya-glass-blur: blur(20px) saturate(180%);
-  --amaya-glass-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 0.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* Dark: the films are made of ink (light) at low alpha, as white glass on a
@@ -53,18 +51,15 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* 1 + 2. Gradient and grain                                           */
+/* 1. Gradient                                                        */
 /* ------------------------------------------------------------------ */
 
 :root[amaya-shell][amaya-glass] {
   background-color: var(--amaya-surface-window);
   background-image:
-    var(--amaya-glass-grain),
     radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--amaya-glass-tint) var(--amaya-glass-strength), transparent) 10%, transparent 70%),
     radial-gradient(circle at 95% 0%, color-mix(in oklch, var(--amaya-glass-tint-2) var(--amaya-glass-strength), transparent) 0%, transparent 75%),
     linear-gradient(-5deg, color-mix(in oklch, var(--amaya-glass-tint-3) var(--amaya-glass-strength), transparent) 10%, transparent 80%);
-  /* The grain blends into the gradient under it. */
-  background-blend-mode: overlay, normal, normal, normal;
 }
 
 :root[amaya-shell][amaya-glass] body,
@@ -76,7 +71,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* 3. Glass films                                                      */
+/* 2. Glass films                                                      */
 /* ------------------------------------------------------------------ */
 
 /* Every sidebar control reads the surface tokens: swap them for films. */
@@ -99,7 +94,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. Floating page card                                               */
+/* 3. Floating page card                                               */
 /* ------------------------------------------------------------------ */
 
 :root[amaya-shell][amaya-glass]:not([inDOMFullscreen]) #tabbrowser-tabpanels > :not(.split-view-panel) .browserContainer {
