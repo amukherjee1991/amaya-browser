@@ -132,7 +132,9 @@ def make_dmg(src_root: Path, out: Path) -> None:
     refuse to open it without right-click -> Open until it is signed and
     notarized (packaging/macos/README.md secs 2 and 4)."""
     out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_name(out.name + ".part")
+    # hdiutil appends .dmg to the output path if it doesn't already end in
+    # .dmg, so a plain ".part" suffix would silently become ".part.dmg".
+    tmp = out.with_name(out.stem + ".part.dmg")
     tmp.unlink(missing_ok=True)
     run(["hdiutil", "create", "-volname", "Amaya", "-srcfolder", str(src_root),
          "-fs", "HFS+", "-format", "UDZO", "-ov", str(tmp)])

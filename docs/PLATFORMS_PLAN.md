@@ -75,13 +75,25 @@ com.apple.quarantine`. For a real release:
 - GitHub secrets: the certificate (`.p12` + password) and the notary API key.
 
 ### Updates on macOS
-Unlike Linux, keep **Firefox's built-in updater** (MAR files): it can replace
+Eventually keep **Firefox's built-in updater** (MAR files): it can replace
 the app without admin rights. Amaya serves a static update manifest from
 amaya.arghyam.me (`/update/<channel>/update.xml`) — no identifiers in the URL
 beyond version and platform, per the plan. Sign MAR files with an Amaya MAR
 key (`--enable-verify-mar` with Amaya's public key compiled in). The release
-job generates the complete MAR and the manifest. The `update` UI module defers
-to the built-in updater on macOS.
+job generates the complete MAR and the manifest. The `update` UI module will
+defer to the built-in updater on macOS once that exists.
+
+**Interim (now):** `configs/macos/mozconfig` keeps `--enable-updater` compiled
+in for that future, but it is not configured — `application.ini` still carries
+Mozilla's own real `aus5.mozilla.org` URL unmodified, compiled in, which a left
+-enabled updater would periodically query with build/version/channel info.
+`settings/policies.json` sets `DisableAppUpdate: true` to turn that off until
+the MAR key + manifest above exist (found 2026-11-01: the first macOS build
+would otherwise have silently checked Mozilla's real update server). The
+`ui/modules/update/` JS module (the Linux mechanism: a static `latest.json`,
+manual download, user-initiated) now also covers macOS via a `"dmg"` file
+entry — `packagedType()` returns `"dmg"` on macOS instead of falling through to
+`"tar"` (found and fixed the same day: it was offering the Linux tarball).
 
 ### Packaging and distribution
 - `.dmg` from `mach package` (works when cross-compiling).

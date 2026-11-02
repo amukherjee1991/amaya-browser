@@ -2,32 +2,36 @@
  * you install it.  Owns ui/modules/update/.
  *
  * Firefox's updater is compiled out on Linux (Amaya ships as a .deb and a
- * .tar.xz), so this module does the minimum by hand:
+ * .tar.xz) and not yet configured on macOS (no MAR signing key or update
+ * manifest; see docs/PLATFORMS_PLAN.md), so this module does the minimum by
+ * hand on both:
  *
  *   1. Check.  ~60 s after the app starts, then every 4 h, when a window
  *      becomes active again more than 1 h after the last check, and on demand
  *      from the command bar, GET <amaya.update.url> (a static latest.json):
  *        {"version": "159.0-3", "prerelease": true,
- *         "files": {"deb": "...deb", "tar": "...tar.xz", "sums": "SHA256SUMS"}}
- *      Files are resolved relative to the manifest URL.  The request carries
- *      no cookies, no referrer, no custom headers and no identifiers; the only
- *      thing the server learns is that an Amaya asked (IP + standard headers).
- *      Checks are shared across windows: the window that runs one claims it
- *      by writing amaya.update.lastCheck (seconds) first.
+ *         "files": {"deb": "...deb", "tar": "...tar.xz", "dmg": "...dmg",
+ *                   "sums": "SHA256SUMS"}}
+ *      ("dmg" is macOS; a manifest without one just never shows an update
+ *      there.)  Files are resolved relative to the manifest URL.  The request
+ *      carries no cookies, no referrer, no custom headers and no identifiers;
+ *      the only thing the server learns is that an Amaya asked (IP + standard
+ *      headers).  Checks are shared across windows: the window that runs one
+ *      claims it by writing amaya.update.lastCheck (seconds) first.
  *   2. Prompt.  A small card in the sidebar above the spaces switcher (or a
  *      notification bar when the shell is not loaded).  "Later" remembers the
  *      version in amaya.update.dismissed; the next version shows again, and
  *      "Check for updates" in the command bar always shows it.
- *   3. Update.  A .deb install with Amaya's apt source
+ *   3. Update.  On Linux, a .deb install with Amaya's apt source
  *      (/etc/apt/sources.list.d/amaya.sources, shipped by the .deb, not set to
  *      "Enabled: no") gets the release through apt, so Update opens the
  *      system updater (update-manager, else GNOME Software's updates page;
  *      started with nsIProcess, no shell) or says to run `sudo apt upgrade`.
- *      Otherwise it downloads the .deb (install dir under /usr/lib/amaya) or
- *      the .tar.xz (anything else) plus SHA256SUMS into your Downloads
- *      folder, verifies the sha256 and then opens the .deb with the desktop's
- *      software installer (which asks for the admin password) or reveals the
- *      archive.  Nothing is installed by Amaya itself.
+ *      Otherwise (the .tar.xz, or the .dmg on macOS) it downloads the file
+ *      plus SHA256SUMS into your Downloads folder, verifies the sha256, then
+ *      opens the .deb with the desktop's software installer (which asks for
+ *      the admin password) or reveals the file so you can unpack/mount it by
+ *      hand.  Nothing is installed by Amaya itself.
  *
  * Prefs:
  *   amaya.update.enabled        bool, default true   automatic checks
@@ -39,7 +43,7 @@
  *                                                    every window shows it
  *   amaya.update.currentVersion string  DEVELOPMENT ONLY: used only when
  *                                       <ui dir>/version.json is missing
- *   amaya.update.installType    "apt" | "deb" | "tar"  DEVELOPMENT/TEST
+ *   amaya.update.installType    "apt" | "deb" | "tar" | "dmg"  DEVELOPMENT/TEST
  *                                       override ("apt" = .deb with the apt
  *                                       source)
  *
@@ -63,6 +67,10 @@
   const { Downloads } = ChromeUtils.importESModule(
     "resource://gre/modules/Downloads.sys.mjs"
   );
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
+  );
+  const IS_MAC = AppConstants.platform == "macosx";
 
   const PREF = {
     enabled: "amaya.update.enabled",
@@ -144,7 +152,7 @@
       version: String(data.version).trim(),
       prerelease: !!data.prerelease,
       published_at: typeof data.published_at == "string" ? data.published_at : "",
-      files: { deb: validName(f.deb), tar: validName(f.tar), sums: validName(f.sums) },
+      files: { deb: validName(f.deb), tar: validName(f.tar), dmg: validName(f.dmg), sums: validName(f.sums) },
       base,
     };
   }
@@ -224,7 +232,7 @@
   let aptSource = false;
   function installType() {
     const o = prefs.getStringPref(PREF.installType, "");
-    if (o === "apt" || o === "deb" || o === "tar") {
+    if (o === "apt" || o === "deb" || o === "tar" || o === "dmg") {
       return o;
     }
     const type = packagedType();
@@ -250,6 +258,9 @@
   }
 
   function packagedType() {
+    if (IS_MAC) {
+      return "dmg";
+    }
     let dir = "";
     try {
       dir = Services.dirsvc.get("GreD", Ci.nsIFile).path;
@@ -798,6 +809,8 @@
         text = s.opened || s.skipped
           ? "Finish in your software installer, then restart Amaya."
           : `Open ${s.name} in your Downloads folder with your software installer, then restart Amaya.`;
+      } else if (s.type === "dmg") {
+        text = `Open ${s.name}, drag Amaya to Applications to replace the old one, then restart Amaya.`;
       } else {
         text = `Unpack ${s.name} over your current Amaya folder, then restart.`;
       }

@@ -6,6 +6,7 @@
     "DisablePocket": true,
     "DisableAccounts": true,
     "DisableSystemAddonUpdate": true,
+    "DisableAppUpdate": true,
     "DontCheckDefaultBrowser": true,
     "OverrideFirstRunPage": "",
     "OverridePostUpdatePage": "",

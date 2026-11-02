@@ -241,7 +241,13 @@ class MacPackageTests(ToolTestCase):
                     else:
                         shutil.rmtree(item)
             elif cmd[:2] == ["hdiutil", "create"]:
-                Path(cmd[-1]).write_bytes(b"fake dmg built")
+                # Real hdiutil appends .dmg when the path doesn't already end
+                # in it -- replicate that so a wrong tmp-file assumption fails
+                # here instead of on a real Mac.
+                dest = cmd[-1]
+                if not dest.endswith(".dmg"):
+                    dest += ".dmg"
+                Path(dest).write_bytes(b"fake dmg built")
             return mock.Mock(returncode=0, stdout="", stderr="")
 
         return mock.patch.object(commands, "run", side_effect=side_effect)
