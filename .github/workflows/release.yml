@@ -15,6 +15,10 @@ on:
       privacy_test_duration:
         description: "Idle-traffic test duration in seconds"
         default: "300"
+      build_macos:
+        description: "Also package the macOS (arm64) build from its engine — unsigned preview, artifact only (not published to the release yet: no signing/notarization, no macOS Gate 1 harness; see docs/PLATFORMS_PLAN.md)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -122,3 +126,58 @@ jobs:
           } > notes.md
           gh release create "$TAG" dist/amaya_*.deb dist/amaya-*.tar.xz dist/SHA256SUMS dist/privacy-report.json \
             --title "Amaya ${{ steps.ver.outputs.version }}" --notes-file notes.md --prerelease --verify-tag
+
+  # Apple Silicon, unsigned preview. Artifact only for now -- not attached to
+  # the tag's GitHub Release (no signing/notarization yet, and the privacy
+  # harness in tests/privacy/ is still Linux-only; see docs/PLATFORMS_PLAN.md).
+  # Needs an engine already built by engine.yml's macos-aarch64 job for this key.
+  macos-aarch64:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_macos
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests and patch lint
+        run: |
+          python3 -m unittest discover -s tests/tooling
+          tools/amaya lint-patches
+
+      - name: Download the compiled engine
+        id: engine
+        run: |
+          KEY=$(tools/amaya engine-key)
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          mkdir -p engine
+          if ! gh release download "engine-$KEY" --dir engine --pattern "engine-$KEY.dmg*"; then
+            echo "::error::No compiled macOS engine for $KEY. Run the 'Engine build' workflow first with build_macos: true."
+            exit 1
+          fi
+          (cd engine && shasum -a 256 -c "engine-$KEY.dmg.sha256")
+
+      - name: Package
+        run: |
+          tools/amaya package --engine "engine/engine-${{ steps.engine.outputs.key }}.dmg"
+          ls -la dist/
+
+      - name: Checksums
+        run: |
+          cd dist
+          shasum -a 256 Amaya-*.dmg > SHA256SUMS
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amaya-${{ github.ref_name }}-macos-aarch64-UNSIGNED
+          path: |
+            dist/Amaya-*.dmg
+            dist/SHA256SUMS
+          if-no-files-found: error

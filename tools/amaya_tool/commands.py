@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import tarfile
+import tempfile
 from pathlib import Path
 
 from .context import WORKDIR_ENV, Context
@@ -61,16 +62,39 @@ def run_cmd(ctx: Context, extra: list[str]) -> int:
 # --------------------------------------------------------------------------
 def find_mach_package(ctx: Context) -> Path:
     dist = ctx.objdir / "dist"
-    candidates = [p for pat in ("amaya-*.tar.xz", "amaya-*.tar.bz2")
-                  for p in dist.glob(pat) if p.is_file()]
+    if ctx.platform == "macos":
+        candidates = [p for p in dist.glob("*.dmg") if p.is_file()]
+        hint = "*.dmg"
+    else:
+        candidates = [p for pat in ("amaya-*.tar.xz", "amaya-*.tar.bz2")
+                      for p in dist.glob(pat) if p.is_file()]
+        hint = "amaya-*.tar.xz / .tar.bz2"
     if not candidates:
-        raise AmayaError(f"no amaya-*.tar.xz / .tar.bz2 found in {dist}")
+        raise AmayaError(f"no {hint} found in {dist}")
     return max(candidates, key=lambda p: p.stat().st_mtime)
+
+
+def extract_dmg(dmg: Path, dest: Path) -> None:
+    """Mount a dmg read-only and copy its whole volume into dest, including
+    the Applications symlink, custom volume icon and Finder background that
+    mach's own mac packaging step already built from branding/amaya/."""
+    mount_point = Path(tempfile.mkdtemp(prefix="amaya-dmg-"))
+    try:
+        run(["hdiutil", "attach", str(dmg), "-readonly", "-nobrowse",
+             "-noautoopen", "-mountpoint", str(mount_point)])
+        try:
+            run(["cp", "-a", f"{mount_point}/.", str(dest)])
+        finally:
+            run(["hdiutil", "detach", str(mount_point), "-quiet"], check=False)
+    finally:
+        mount_point.rmdir()
 
 
 def extract(archive: Path, dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    if shutil.which("tar"):
+    if archive.suffix == ".dmg":
+        extract_dmg(archive, dest)
+    elif shutil.which("tar"):
         run(["tar", "-xf", archive, "-C", dest])
     else:  # pragma: no cover
         with tarfile.open(archive) as tf:
@@ -89,21 +113,54 @@ def make_tar_xz(src_root: Path, name: str, out: Path) -> None:
     tmp.replace(out)
 
 
+def macos_arch_label(ctx: Context) -> str:
+    """Homebrew-style arch label (matches packaging/macos/amaya.rb.template)."""
+    return "arm64" if ctx.arch == "aarch64" else ctx.arch
+
+
+def find_app_bundle(root: Path) -> Path:
+    apps = [p for p in root.iterdir() if p.is_dir() and p.suffix == ".app"]
+    if len(apps) != 1:
+        raise AmayaError(f"expected exactly one .app bundle in {root}, "
+                         f"found {[p.name for p in apps]}")
+    return apps[0]
+
+
+def make_dmg(src_root: Path, out: Path) -> None:
+    """Build an UNSIGNED dmg from src_root (the full volume layout: the .app,
+    the Applications symlink, background and volume icon). Gatekeeper will
+    refuse to open it without right-click -> Open until it is signed and
+    notarized (packaging/macos/README.md secs 2 and 4)."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_name(out.name + ".part")
+    tmp.unlink(missing_ok=True)
+    run(["hdiutil", "create", "-volname", "Amaya", "-srcfolder", str(src_root),
+         "-fs", "HFS+", "-format", "UDZO", "-ov", str(tmp)])
+    tmp.replace(out)
+
+
 def repackage(ctx: Context, mach_archive: Path) -> tuple[Path, Path]:
-    """Extract mach's archive into dist/stage, stage settings, re-tar."""
+    """Extract mach's package into dist/stage, stage settings, and rebuild
+    the final artifact (re-tar on Linux, rebuild the dmg on macOS)."""
     up = ctx.upstream()
     stage_root = ctx.dist / "stage"
     if stage_root.exists():
         shutil.rmtree(stage_root)
     extract(mach_archive, stage_root)
-    tops = [p for p in stage_root.iterdir() if p.is_dir()]
-    if len(tops) != 1:
-        raise AmayaError(f"expected one top-level directory in {mach_archive.name}, "
-                         f"found {[p.name for p in tops]}")
-    appdir = tops[0]
-    stage(ctx, appdir)
-    out = ctx.dist / up.dist_tarball_name(ctx.platform, ctx.arch)
-    make_tar_xz(stage_root, appdir.name, out)
+    if ctx.platform == "macos":
+        appdir = find_app_bundle(stage_root)
+        stage(ctx, appdir / "Contents" / "Resources")
+        out = ctx.dist / f"Amaya-{up.amaya_version}-{macos_arch_label(ctx)}.dmg"
+        make_dmg(stage_root, out)
+    else:
+        tops = [p for p in stage_root.iterdir() if p.is_dir()]
+        if len(tops) != 1:
+            raise AmayaError(f"expected one top-level directory in {mach_archive.name}, "
+                             f"found {[p.name for p in tops]}")
+        appdir = tops[0]
+        stage(ctx, appdir)
+        out = ctx.dist / up.dist_tarball_name(ctx.platform, ctx.arch)
+        make_tar_xz(stage_root, appdir.name, out)
     info(f"wrote {out}")
     return appdir, out
 

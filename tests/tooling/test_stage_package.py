@@ -2,8 +2,10 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import tarfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from helpers import ToolTestCase, quiet
@@ -179,6 +181,113 @@ class PackageTests(ToolTestCase):
         env = self.ctx().mach_env()
         self.assertEqual(env["MOZCONFIG"], str(self.work / "engine" / "mozconfig"))
         self.assertEqual(env["DISABLE_TELEMETRY"], "1")
+
+
+class MacPackageTests(ToolTestCase):
+    """mach package on macOS produces a .dmg, not a tarball: a mounted volume
+    with the .app bundle, an Applications symlink, a background and a custom
+    icon (already built by mach from branding/amaya/). repackage() must mount
+    it, re-stage settings into Contents/Resources, and rebuild the dmg -
+    without a real Mac, so `hdiutil`/`cp` are faked via a `run()` side effect
+    that performs the equivalent real filesystem operations."""
+
+    def ctx(self, env=None, plat="macos", arch="aarch64"):
+        return super().ctx(env=env, plat=plat, arch=arch)
+
+    def make_mach_dmg(self):
+        dist = self.work / "obj-amaya-macos-aarch64" / "dist"
+        dist.mkdir(parents=True)
+        dmg = dist / f"Amaya {self.version}.dmg"
+        dmg.write_bytes(b"fake dmg")
+        return dmg
+
+    def fake_hdiutil(self, app_name="Amaya.app"):
+        """Builds a fake mounted-volume tree once, then patches commands.run
+        so `hdiutil attach` materialises it at -mountpoint, `cp -a` copies it
+        into repackage()'s dest, and `hdiutil create` writes a dummy dmg."""
+        volume = self.tmp / "mounted-volume"
+        bundle = volume / app_name
+        (bundle / "Contents" / "MacOS").mkdir(parents=True)
+        (bundle / "Contents" / "MacOS" / "amaya").write_text("#!/bin/sh\n")
+        (bundle / "Contents" / "Resources").mkdir(parents=True)
+        (volume / "Applications").symlink_to("/Applications")
+
+        def copy_into(src: Path, dst: Path) -> None:
+            dst.mkdir(parents=True, exist_ok=True)
+            for item in src.iterdir():
+                d = dst / item.name
+                if item.is_symlink():
+                    d.symlink_to(os.readlink(item))
+                elif item.is_dir():
+                    shutil.copytree(item, d, symlinks=True)
+                else:
+                    shutil.copy2(item, d)
+
+        def side_effect(cmd, *a, **k):
+            cmd = [str(c) for c in cmd]
+            if cmd[:2] == ["hdiutil", "attach"]:
+                mountpoint = Path(cmd[cmd.index("-mountpoint") + 1])
+                copy_into(volume, mountpoint)
+            elif cmd[0] == "cp":
+                src = cmd[-2][:-2] if cmd[-2].endswith("/.") else cmd[-2]
+                copy_into(Path(src), Path(cmd[-1]))
+            elif cmd[:2] == ["hdiutil", "detach"]:
+                # A real detach leaves the mountpoint dir empty (unmounted);
+                # repackage()'s cleanup then rmdir()s it.
+                mountpoint = Path(cmd[2])
+                for item in mountpoint.iterdir():
+                    if item.is_symlink() or item.is_file():
+                        item.unlink()
+                    else:
+                        shutil.rmtree(item)
+            elif cmd[:2] == ["hdiutil", "create"]:
+                Path(cmd[-1]).write_bytes(b"fake dmg built")
+            return mock.Mock(returncode=0, stdout="", stderr="")
+
+        return mock.patch.object(commands, "run", side_effect=side_effect)
+
+    def test_find_mach_package_prefers_dmg(self):
+        dmg = self.make_mach_dmg()
+        self.assertEqual(commands.find_mach_package(self.ctx()), dmg)
+
+    def test_macos_arch_label_maps_aarch64_to_arm64(self):
+        self.assertEqual(commands.macos_arch_label(self.ctx()), "arm64")
+        self.assertEqual(commands.macos_arch_label(self.ctx(arch="x86_64")), "x86_64")
+
+    def test_find_app_bundle_rejects_zero_or_many(self):
+        root = self.tmp / "root"
+        root.mkdir()
+        with self.assertRaisesRegex(AmayaError, "expected exactly one"):
+            commands.find_app_bundle(root)
+        (root / "Amaya.app").mkdir()
+        (root / "Other.app").mkdir()
+        with self.assertRaisesRegex(AmayaError, "expected exactly one"):
+            commands.find_app_bundle(root)
+
+    def test_repackage_stages_into_contents_resources_and_builds_dmg(self):
+        settings = self.repo / "settings"
+        settings.mkdir()
+        (settings / "amaya.cfg").write_text("// cfg\n")
+        dmg = self.make_mach_dmg()
+        with self.fake_hdiutil(), quiet():
+            appdir, out = commands.repackage(self.ctx(), dmg)
+        self.assertEqual(appdir.name, "Amaya.app")
+        self.assertEqual((appdir / "Contents" / "Resources" / "amaya.cfg").read_text(),
+                         "// cfg\n")
+        # The Applications symlink and the bundle both survive the rebuild.
+        stage_root = self.repo / "dist" / "stage"
+        self.assertTrue((stage_root / "Applications").is_symlink())
+        self.assertEqual(out.name, f"Amaya-{self.version}-1-arm64.dmg")
+        self.assertTrue(out.is_file())
+
+    def test_package_with_prebuilt_engine_builds_dmg(self):
+        dmg = self.make_mach_dmg()
+        moved = self.tmp / "engine.dmg"
+        dmg.rename(moved)
+        with self.fake_hdiutil(), quiet():
+            rc = commands.package_cmd(self.ctx(), engine=moved)
+        self.assertEqual(rc, 0)
+        self.assertTrue((self.repo / "dist" / f"Amaya-{self.version}-1-arm64.dmg").is_file())
 
 
 if __name__ == "__main__":

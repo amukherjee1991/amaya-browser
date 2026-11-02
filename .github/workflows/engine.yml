@@ -14,6 +14,10 @@ on:
         description: "Rebuild even if an engine for this key exists"
         type: boolean
         default: false
+      build_macos:
+        description: "Also build the macOS (arm64) engine — unsigned preview, costs macOS-runner minutes"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -95,3 +99,66 @@ jobs:
           gh release create "engine-$KEY" "engine-$KEY.tar.xz" "engine-$KEY.tar.xz.sha256" \
             --target "$GITHUB_SHA" --prerelease --title "Engine $KEY" \
             --notes "Compiled Gecko engine for Amaya, built by GitHub Actions from commit $GITHUB_SHA ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})). Not a user download: release.yml stages settings, extensions and the UI into it."
+
+  # Apple Silicon, unsigned preview (Phase M, docs/PLATFORMS_PLAN.md). Only on
+  # workflow_dispatch with build_macos: true -- not on every push yet, since
+  # this path is still unverified on a fresh runner (tuned so far on one dev
+  # Mac; first real run will likely need adjusting, same as linux-x86_64 once did).
+  macos-aarch64:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_macos
+    runs-on: macos-14
+    timeout-minutes: 360
+    env:
+      AMAYA_WORKDIR: ${{ github.workspace }}-build
+      DISABLE_TELEMETRY: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Engine key
+        id: key
+        run: |
+          KEY=$(tools/amaya engine-key)
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          if [ "${{ inputs.force }}" != "true" ] && gh release view "engine-$KEY" >/dev/null 2>&1; then
+            echo "Engine $KEY already exists; nothing to build."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore Mozilla toolchains
+        if: steps.key.outputs.exists != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.mozbuild
+          key: mozbuild-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('upstream.json') }}
+          restore-keys: mozbuild-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Fetch, bootstrap and apply the Amaya layer
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          tools/amaya fetch
+          tools/amaya bootstrap
+          tools/amaya import
+
+      - name: Compile
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          tools/amaya build
+          (cd "$AMAYA_WORKDIR/engine" && MOZCONFIG="$PWD/mozconfig" ./mach package)
+
+      - name: Publish the engine
+        if: steps.key.outputs.exists != 'true'
+        run: |
+          KEY="${{ steps.key.outputs.key }}"
+          ARCHIVE=$(ls "$AMAYA_WORKDIR"/obj-amaya-macos-aarch64/dist/*.dmg | head -1)
+          cp "$ARCHIVE" "engine-$KEY.dmg"
+          shasum -a 256 "engine-$KEY.dmg" > "engine-$KEY.dmg.sha256"
+          gh release delete "engine-$KEY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "engine-$KEY" "engine-$KEY.dmg" "engine-$KEY.dmg.sha256" \
+            --target "$GITHUB_SHA" --prerelease --title "Engine $KEY" \
+            --notes "Compiled Gecko engine for Amaya (macOS arm64, unsigned), built by GitHub Actions from commit $GITHUB_SHA ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})). Not a user download: release.yml stages settings, extensions and the UI into it."

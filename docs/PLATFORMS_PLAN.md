@@ -104,12 +104,25 @@ to the built-in updater on macOS.
 
 **Work items**
 - [ ] Decide the Apple Developer account (needed before a signed release)
-- [ ] `configs/macos/mozconfig` real values; cross-compile on Linux in `engine.yml` (macos-aarch64)
-- [ ] Compile `Assets.car` once on a Mac / macOS runner
-- [ ] `release.yml` macOS job: stage settings + UI into `Amaya.app`, sign + notarize with `rcodesign`, build `.dmg`
+- [x] `configs/macos/mozconfig`, `tools/amaya fetch/bootstrap/import` run natively on an
+      Apple Silicon Mac without changes (`feat/macos` branch, 2026-11-01); `tools/amaya build`
+      underway as this is written — see the branch for the outcome. `engine.yml` /
+      `release.yml` got `macos-aarch64` jobs, gated behind `workflow_dispatch`
+      (`build_macos: true`) rather than the normal push/tag trigger until a
+      real CI run has been checked — cross-compiling on Linux is still untried
+- [x] Compile `Assets.car` once on a Mac (`xcrun actool`, committed to `branding/amaya/`)
+- [x] `tools/amaya package` on macOS: mounts mach's own `.dmg` (background/icon/
+      `Applications` symlink already baked in from `branding/amaya/`), re-stages
+      settings into `Contents/Resources`, rebuilds an **unsigned** `Amaya-<version>-<arch>.dmg`.
+      No separate build-dmg.sh needed — mach's native DMG packaging already does the
+      Finder polish; signing + notarization (`rcodesign`) still need the Apple Developer ID
 - [ ] MAR signing key + update manifest on amaya.arghyam.me
 - [ ] Gate 1 macOS port (pf) on `macos-14`
-- [ ] Keyboard and window-control checks in each UI module
+- [x] Keyboard and window-control checks in each UI module — confirmed already handled:
+      `cmdbar.js`/`shell.js` branch `e.metaKey` vs `e.ctrlKey` on `AppConstants.platform`;
+      compact-mode traffic-light hover is still a known cosmetic gap
+- [x] amaya.arghyam.me: `.dmg` wired into `latest.json`/`sync-release.py`/`site.js`,
+      offered first to visitors on a Mac (website repo, `feat/macos` branch)
 - [ ] Homebrew tap
 - [ ] Intel build, then universal
 
