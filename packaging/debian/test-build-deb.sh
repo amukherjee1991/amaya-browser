@@ -154,7 +154,11 @@ inspect_deb() {
     check "md5sums verify" bash -c "cd '$x' && md5sum --quiet -c DEBIAN/md5sums"
 
     if command -v desktop-file-validate >/dev/null; then
-        check "desktop-file-validate" desktop-file-validate "$x/usr/share/applications/$APP_ID.desktop"
+        if desktop-file-validate "$x/usr/share/applications/$APP_ID.desktop" >"$TMP/dfv.log" 2>&1; then
+            pass "desktop-file-validate"
+        else
+            fail "desktop-file-validate"; sed 's/^/       /' "$TMP/dfv.log"
+        fi
     else missing_tool desktop-file-validate; fi
     if command -v appstreamcli >/dev/null; then
         if appstreamcli validate --no-net --explain "$x/usr/share/metainfo/$APP_ID.metainfo.xml" >"$TMP/as.log" 2>&1; then
